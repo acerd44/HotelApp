@@ -1,4 +1,5 @@
-﻿using HotelApp.Core;
+﻿using Azure;
+using HotelApp.Core;
 using HotelApp.Data;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,26 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new room\n ");
             Console.WriteLine("0. Back");
-            Menu.RequestEntry("Write the size of the room: ", ref input);
-            if (input == 0) return;
+            Console.Write("Write the size of the room:(15-40) ");
+            while (!int.TryParse(Console.ReadLine(), out input) || (input >= 15 && input <= 40))
+            {
+                if (input == 0) return;
+                Console.WriteLine($"Please enter a size between 15-40");
+            }
             room.Size = input;
-            Menu.RequestEntry("Write the amount of beds in the room: ", ref input);
+            Console.Write("Write the amount of beds in the room:(1-4) ");
+            while (!int.TryParse(Console.ReadLine(), out input) || (input >= 1 && input <= 4))
+            {
+                if (input == 0) return;
+                Console.WriteLine($"Please enter a size between 1-4");
+            }
             room.Beds = input;
-            Menu.RequestEntry("Write the price of the room: ", ref input);
+            Console.Write("Write the price of the room: ");
+            while (!int.TryParse(Console.ReadLine(), out input) || input == 0)
+            {
+                if (input == 0) return;
+                Console.WriteLine($"Please enter a number.");
+            }
             room.Price = input;
             db.Room.Add(room);
             db.SaveChanges();
@@ -30,88 +45,92 @@ namespace HotelApp.Core.Handlers
 
         public static void Delete(HotelContext db)
         {
-            Room? room = null;
-            string? confirmInput = string.Empty;
-            int roomIndex = -1, range;
+            int roomIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a room\n ");
             Console.WriteLine("0. Back");
             var allRooms = db.Room.ToList();
-            range = allRooms.Count;
-            if (range == 0) return;
+            if (allRooms.Count == 0) return;
             Console.WriteLine("Index - ID - Size - Beds");
-            for (int i = 1; i <= range; i++)
+            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size} - {r.Beds} - {r.Price}"));
+            Console.Write("Which room would you like to delete?");
+            while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
             {
-                Console.WriteLine($"{i}. {allRooms[i - 1].Id} - {allRooms[i - 1].Size} - {allRooms[i - 1].Beds}");
+                if (roomIndex == 0) return;
+                Console.WriteLine($"Please enter an option.");
             }
-            Menu.RequestEntryWithinRange("Which room would you like to delete? ", ref roomIndex, range);
-            if (roomIndex > 0)
+            Room room = db.Room.First(cr => cr.Id == allRooms[roomIndex - 1].Id);
+            Console.Write($"Are you sure you want to delete {room.Id}?(y/n) ");
+            string? confirmInput = Console.ReadLine().ToLower();
+            while (confirmInput != "y" && confirmInput != "n")
             {
-                room = db.Room.First(cr => cr.Id == allRooms[roomIndex - 1].Id);
-                Menu.RequestEntry($"Are you sure you want to delete {room.Id}?(y/n) ", ref confirmInput);
-                if (confirmInput.ToLower() == "y")
-                {
-                    db.Room.Remove(room);
-                    db.SaveChanges();
-                }
+                Console.WriteLine("Please enter Y/N");
+                confirmInput = Console.ReadLine();
+            }
+            if (confirmInput.ToLower() == "y")
+            {
+                db.Room.Remove(room);
+                db.SaveChanges();
             }
         }
 
         public static void Update(HotelContext db)
         {
-            Room? room = null;
-            int roomIndex = -1, input = -1, range;
+            int roomIndex = -1, input = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new room\n ");
             Console.WriteLine("0. Back");
             var allRooms = db.Room.ToList();
-            range = allRooms.Count;
-            for (int i = 1; i <= range; i++)
+            if (allRooms.Count == 0) return;
+            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size} - {r.Beds} - {r.Price}"));
+            Console.Write("Which room would you like to edit?");
+            while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == input))
             {
-                Console.WriteLine($"{i}. {allRooms[i - 1].Id} - {allRooms[i - 1].Size} - {allRooms[i - 1].Beds} - {allRooms[i - 1].Price}");
+                if (roomIndex == 0) return;
+                Console.WriteLine("Please enter an option");
             }
-            Menu.RequestEntryWithinRange("Which room would you like to edit? ", ref roomIndex, range);
             if (roomIndex == 0) return;
-            room = db.Room.First(cr => cr.Id == allRooms[roomIndex - 1].Id);
+            Room room = db.Room.First(cr => cr.Id == allRooms[roomIndex - 1].Id);
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting Room {room.Id}\n ");
             Console.WriteLine("0. Back");
             Console.WriteLine("1. Size");
             Console.WriteLine("2. Beds");
             Console.WriteLine("3. Price");
-            range = 3;
-            Menu.RequestEntryWithinRange("Which part would you like to edit? ", ref roomIndex, range);
+            Console.Write("Which part would you like to edit?");
+            while (!int.TryParse(Console.ReadLine(), out roomIndex) || !Enumerable.Range(0, 4).Contains(roomIndex))
+            {
+                if (roomIndex == 0) return;
+                Console.WriteLine("Please enter an option (0-3)");
+            }
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting Room {room.Id} \n ");
             switch (roomIndex)
             {
                 case 1:
-                    //Menu.RequestEntry("What would you like to change the size to? ", ref input);
                     Console.Write("What would you like to change the size to? ");
                     while (!int.TryParse(Console.ReadLine(), out input) || input <= 0)
                     {
                         if (input == 0) return;
-                        Console.WriteLine($"Please enter a value above 0kr");
+                        Console.WriteLine("Please enter a value above 0kr");
                     }
                     room.Size = input;
                     break;
                 case 2:
-                    //Menu.RequestEntry("What would you like to change the amount of beds to? ", ref input);
                     Console.Write("What would you like to change the amount of beds to? ");
                     while (!int.TryParse(Console.ReadLine(), out input) || input <= 0)
                     {
                         if (input == 0) return;
-                        Console.WriteLine($"Please enter a value above 0kr");
+                        Console.WriteLine("Please enter a value above 0kr");
                     }
                     room.Beds = input;
                     break;
                 case 3:
-                    //Menu.RequestEntry("What would you like to change the price to? ", ref input);
                     Console.Write("What would you like to change the price to? ");
                     while (!int.TryParse(Console.ReadLine(), out input) || input <= 0)
                     {
                         if (input == 0) return;
-                        Console.WriteLine($"Please enter a value above 0kr");
+                        Console.WriteLine("Please enter a value above 0kr");
                     }
                     room.Price = input;
                     break;

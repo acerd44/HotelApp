@@ -17,8 +17,8 @@ namespace HotelApp
     public class App
     {
         /* todo:
-         * 1. add support for checking specific dates when making a booking so it only shows available rooms
-         * 2. make sure you can't make a booking if there is already one already made for the same date(s) and room.
+         * 1. add support for checking specific dates when making a booking so it only shows available rooms - DONE
+         * 2. make sure you can't make a booking if there is already one already made for the same date(s) and room. - DONE cause of 1
          * 3. remove all bookings related when deleting a guest, this also means deleting invoices of the booking. 
          * 4. everytime the app is ran, check for any invoices that haven't been paid after the due date and archive them and remove the booking.
          * 
@@ -84,7 +84,7 @@ namespace HotelApp
                 {
                     Name = "Ali Rahimzadegan",
                     Address = "Yesgatan 3",
-                    PhoneNumber = "3214567123",
+                    PhoneNumber = "0987654321",
                     IsActive = true
                 });
             }
@@ -94,7 +94,7 @@ namespace HotelApp
                 {
                     Name = "Vincent Wang",
                     Address = "Ligmagatan 21",
-                    PhoneNumber = "2312312435",
+                    PhoneNumber = "8745123690",
                     IsActive = true
                 });
             }
@@ -104,7 +104,7 @@ namespace HotelApp
                 {
                     Name = "Lars Verhulst",
                     Address = "Evergreen 742",
-                    PhoneNumber = "129449384",
+                    PhoneNumber = "2356987410",
                     IsActive = true
                 });
             }

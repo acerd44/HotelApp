@@ -19,6 +19,5 @@ namespace HotelApp.Data
         public int GuestId { get; set; }
         public int TotalSum { get; set; }
         public bool IsPaid { get; set; }
-        public bool IsArchived { get; set; }
     }
 }

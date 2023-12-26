@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace HotelApp.Data
@@ -17,6 +18,7 @@ namespace HotelApp.Data
 
         public string Address { get; set; }
         public string PhoneNumber { get; set; }
+        public List<Invoice> Invoices { get; set; } = new List<Invoice>();
         public bool IsActive { get; set; }
     }
 }

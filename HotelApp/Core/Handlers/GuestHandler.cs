@@ -1,4 +1,5 @@
-﻿using Azure.Core;
+﻿using Azure;
+using Azure.Core;
 using HotelApp.Core;
 using HotelApp.Data;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -16,14 +18,13 @@ namespace HotelApp.Core.Handlers
         public static void Create(HotelContext db)
         {
             var guest = new Guest();
-            string? input = string.Empty;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new guest\n ");
             Console.WriteLine("0. Back");
             Console.WriteLine("If you'd like to skip the prompt, just input a minus (-)\n");
-            //Menu.RequestEntry("Write the name of the guest: ", ref input);
             Console.Write("Enter the name of the guest: ");
-            input = Console.ReadLine();
+            string? input = Console.ReadLine();
+            int numberInput = -1;
             while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input == "0")
             {
                 if (input == "0") return;
@@ -31,7 +32,6 @@ namespace HotelApp.Core.Handlers
                 input = Console.ReadLine();
             }
             guest.Name = input;
-            //Menu.RequestEntry("Write the address of the guest: ", ref input);
             Console.Write("Enter the address of the guest: ");
             input = Console.ReadLine();
             while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input == "0")
@@ -41,18 +41,13 @@ namespace HotelApp.Core.Handlers
                 input = Console.ReadLine();
             }
             guest.Address = input;
-            //Menu.RequestEntry("Write the e-mail of the guest: ", ref input);
-            //guest.Email = input;
-            //Menu.RequestEntry("Write the phone number of the guest: ", ref input);
-            Console.Write("Enter the phone number of the guest: ");
-            input = Console.ReadLine();
-            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input == "0")
+            Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
+            while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$"))
             {
-                if (input == "0") return;
-                Console.WriteLine("Please follow the instructions.");
-                input = Console.ReadLine();
+                if (numberInput == 0) return;
+                Console.WriteLine("Please follow the instructions. ");
             }
-            guest.PhoneNumber = input;
+            guest.PhoneNumber = numberInput.ToString();
             guest.IsActive = true;
             db.Guest.Add(guest);
             db.SaveChanges();
@@ -60,85 +55,65 @@ namespace HotelApp.Core.Handlers
 
         public static void Delete(HotelContext db)
         {
-            Guest? guest = null;
-            string? confirmInput = string.Empty;
-            int guestIndex = -1, range;
+            int guestIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a guest\n ");
             Console.WriteLine("0. Back");
             var allGuests = db.Guest.ToList();
-            range = allGuests.Count;
-            if (range == 0) return;
-            Console.WriteLine("Index - ID - Name");
-            for (int i = 1; i <= range; i++)
-            {
-                Console.WriteLine($"{i}. {allGuests[i - 1].Id} - {allGuests[i - 1].Name}");
-            }
-            //Menu.RequestEntryWithinRange("Which guest would you like to delete? ", ref guestIndex, range);
+            if (allGuests.Count == 0) return;
+            Console.WriteLine("ID - Name");
+            allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}"));
             Console.Write("Which guest would you like to delete? ");
-            while (!int.TryParse(Console.ReadLine(), out guestIndex) || !Enumerable.Range(0, range + 1).Contains(guestIndex))
+            while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
             {
                 if (guestIndex == 0) return;
-                Console.WriteLine($"Please enter an option (0-{range})");
+                Console.WriteLine($"Please enter an option");
             }
-            if (guestIndex > 0)
+            Guest guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
+            Console.Write($"Are you sure you want to delete {guest.Name} as a guest?(y/n/h for hard delete) ");
+            string? confirmInput = Console.ReadLine().ToLower();
+            while (string.IsNullOrWhiteSpace(confirmInput) || string.IsNullOrEmpty(confirmInput)
+                || !(confirmInput == "y" || confirmInput== "n" || confirmInput == "h"))
             {
-                guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
-                //Menu.RequestEntry($"Are you sure you want to delete {guest.Name} as a guest?(y/n/h for hard delete) ", ref confirmInput);
-                Console.Write($"Are you sure you want to delete {guest.Name} as a guest?(y/n/h for hard delete) ");
-                while (string.IsNullOrWhiteSpace(confirmInput) || string.IsNullOrEmpty(confirmInput)
-                    || !(confirmInput.ToLower() == "y" || confirmInput.ToLower() == "n" || confirmInput == "h"))
-                {
-                    Console.WriteLine("Please follow the instructions.");
-                    confirmInput = Console.ReadLine();
-                }
-                if (confirmInput.ToLower() == "y")
-                {
-                    guest.IsActive = false;
-                }
-                else if (confirmInput.ToLower() == "h")
-                {
-                    db.Guest.Remove(guest);
-                }
-                db.SaveChanges();
+                Console.WriteLine("Please follow the instructions.");
+                confirmInput = Console.ReadLine();
             }
+            if (confirmInput == "y" || confirmInput == "h")
+            {
+               
+            }
+            db.SaveChanges();
         }
 
         public static void Update(HotelContext db)
         {
-            Guest? guest = null;
             string? input = string.Empty;
-            int guestIndex = -1, range;
+            int guestIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new guest\n ");
             Console.WriteLine("0. Back");
             var allGuests = db.Guest.ToList();
-            range = allGuests.Count;
-            for (int i = 1; i <= range; i++)
-            {
-                Console.WriteLine($"{i}. {allGuests[i - 1].Id} - {allGuests[i - 1].Name} - active: {allGuests[i - 1].IsActive.ToString().ToLower()}");
-            }
-            //Menu.RequestEntryWithinRange("Which guest would you like to edit? ", ref guestIndex, range);
+            if (allGuests.Count == 0) return;
+            allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name} - active: {g.IsActive.ToString().ToLower()}"));
             Console.Write("Which guest would you like to edit? ");
-            while (!int.TryParse(Console.ReadLine(), out guestIndex) || !Enumerable.Range(0, range + 1).Contains(guestIndex))
+            while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
             {
                 if (guestIndex == 0) return;
-                Console.WriteLine($"Please enter an option (0-{range})");
+                Console.WriteLine($"Please enter an option");
             }
-            guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
+            Guest guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting {guest.Name}r\n ");
             Console.WriteLine("0. Back");
             Console.WriteLine("1. Name");
             Console.WriteLine("2. Address");
             Console.WriteLine("3. Phone number");
-            range = 3;
+            int range = 3;
             if (!guest.IsActive)
             {
                 Console.WriteLine("4. Activate");
                 range = 4;
             }
-            //Menu.RequestEntryWithinRange("Which part would you like to edit? ", ref guestIndex, range);
             Console.Write("Which part would you like to edit? ");
             while (!int.TryParse(Console.ReadLine(), out guestIndex) || !Enumerable.Range(0, range + 1).Contains(guestIndex))
             {
@@ -150,24 +125,46 @@ namespace HotelApp.Core.Handlers
             switch (guestIndex)
             {
                 case 1:
-                    Menu.RequestEntry("What would you like to change their name to? ", ref input);
-                    if (input == "0") return;
+                    Console.Write("What would you like to change their name to? ");
+                    while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input.Any(char.IsDigit))
+                    {
+                        if (input == "0") return;
+                        Console.WriteLine("Please enter a name without numbers.");
+                    }
                     guest.Name = input;
                     break;
                 case 2:
-                    Menu.RequestEntry("What would you like to change their address to? ", ref input);
-                    if (input == "0") return;
+                    Console.Write("What would you like to change their address to? ");
+                    while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input == "0")
+                    {
+                        if (input == "0") return;
+                        Console.WriteLine("Please enter an address.");
+                    }
                     guest.Address = input;
                     break;
                 case 3:
-                    Menu.RequestEntry("What would you like to change their phone number to? ", ref input);
-                    if (input == "0") return;
-                    guest.PhoneNumber = input;
+                    Console.Write("What would you like to change their phone number to?(between 6 and 12 digits) ");
+                    int numberInput = -1;
+                    Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
+                    while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$"))
+                    {
+                        if (numberInput == 0) return;
+                        Console.WriteLine("Please follow the instructions.");
+                    }
+                    guest.PhoneNumber = numberInput.ToString();
                     break;
                 case 4:
-                    Menu.RequestConfirmation("Would you like to activate this guest?(y/n) ", ref input);
-                    if (input.ToLower() == "y" && !guest.IsActive)
+                    Console.Write("Would you like to activate this guest?(y/n) ");
+                    input = Console.ReadLine().ToLower();
+                    while (input != "y" && input != "n")
+                    {
+                        Console.WriteLine("Please enter Y/N");
+                        input = Console.ReadLine();
+                    }
+                    if (input == "y" && !guest.IsActive)
+                    {
                         guest.IsActive = true;
+                    }
                     break;
             }
             db.SaveChanges();
@@ -179,22 +176,27 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all guests\n ");
             var allGuests = db.Guest.ToList();
+            if (allGuests.Count == 0) return;
             Console.WriteLine("0. Exit");
             Console.WriteLine("1. Show all guests");
             Console.WriteLine("2. Only show active guests");
             Console.WriteLine("3. Only show inactive guests");
-            Menu.RequestEntryWithinRange("", ref input, 3);
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 4).Contains(input))
+            {
+                if (input == 0) return;
+                Console.WriteLine("Please enter an option (0-3)");
+            }
             Console.WriteLine("\nId - Name");
             switch (input)
             {
                 case 1:
-                    allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name} - active: {g.IsActive.ToString().ToLower()}"));
+                    allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber} - active: {g.IsActive.ToString().ToLower()}"));
                     break;
                 case 2:
-                    allGuests.Where(g => g.IsActive).ToList().ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}"));
+                    allGuests.Where(g => g.IsActive).ToList().ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
                     break;
                 case 3:
-                    allGuests.Where(g => !g.IsActive).ToList().ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}"));
+                    allGuests.Where(g => !g.IsActive).ToList().ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
                     break;
                 case 0:
                     return;
