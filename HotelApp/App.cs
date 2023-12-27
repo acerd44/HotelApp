@@ -17,11 +17,16 @@ namespace HotelApp
     public class App
     {
         /* todo:
-         * 1. add support for checking specific dates when making a booking so it only shows available rooms - DONE
-         * 2. make sure you can't make a booking if there is already one already made for the same date(s) and room. - DONE cause of 1
+
          * 3. remove all bookings related when deleting a guest, this also means deleting invoices of the booking. 
          * 4. everytime the app is ran, check for any invoices that haven't been paid after the due date and archive them and remove the booking.
-         * 
+         * 7. make sure showAll invoices just checks for invoices in general instead of guests with invoices?
+         * 8. add isarchived checks for bookings and invoices
+
+         * 1. add support for checking specific dates when making a booking so it only shows available rooms - DONE
+         * 2. make sure you can't make a booking if there is already one already made for the same date(s) and room. - DONE cause of 1
+         * 5. When checking availbility while editting booking dates or rooms, make sure to exclude the booking itself. - DONE
+         * 6. when editting endDate, make sure to lower the totalSum by how many less days the booking is active for. - DONE?
          */
         private DbContextOptionsBuilder<HotelContext> options;
 
@@ -29,8 +34,8 @@ namespace HotelApp
         {
             var builder = new ConfigurationBuilder().AddJsonFile($"appsettings.json", true, true);
             var config = builder.Build();
-            options = new DbContextOptionsBuilder<HotelContext>();
             var connectionString = config.GetConnectionString("DefaultConnection");
+            options = new DbContextOptionsBuilder<HotelContext>();
             options.UseSqlServer(connectionString);
 
             using (var db = new HotelContext(options.Options))
@@ -45,20 +50,6 @@ namespace HotelApp
                     db.Database.Migrate();
                     SeedData(db);
                 }
-                //Console.WriteLine(BookingHandler.CheckRoomAvailability(db, 1, new DateTime(2023, 12, 24), new DateTime(2023, 12, 27)));
-                //Console.ReadLine();
-                //Console.WriteLine(db.Guest.Max(g => g.Id)); .Max.Contains(input)
-                //var list = db.Guest.Where(g => g.Invoices.Any()).SelectMany(g => g.Invoices.Select(i => i.Id)).ToList();
-                //var list2 = db.Invoice.Where(i => !i.IsArchived && !i.IsPaid).ToList();
-                //    var list3 = new List<Invoice>();
-                //    foreach (var i in db.Guest.ToList())
-                //    {
-                //        if (i.Invoices.Count > 0)
-                //        {
-                //            i.Invoices.ForEach(i => list3.Add(i));
-                //        }
-                //    }
-                //    Console.ReadLine();
             }
         }
         public void Run()
@@ -150,6 +141,48 @@ namespace HotelApp
                     GuestId = 0,
                     Price = 200,
                     IsOccupied = false
+                });
+            }
+            db.SaveChanges();
+            if (!db.Booking.Any(b => b.StartDate.Date != new DateTime(2023, 12, 20)))
+            {
+                db.Booking.Add(new Booking
+                {
+                    GuestId = 3,
+                    RoomId = 4,
+                    StartDate = new DateTime(2023, 12, 20),
+                    EndDate = new DateTime(2023, 12, 30),
+                    IsActive = true,
+                    IsArchived = false
+                });
+                db.Guest.First(g => g.Id == 3).Invoices.Add(new Invoice
+                {
+                    GuestId = 3,
+                    BookingId = 1,
+                    TotalSum = db.Room.First(r => r.Id == 4).Price * 10,
+                    PaidDate = new DateTime(2023, 12, 20),
+                    DueDate = new DateTime(2023, 12, 20).AddDays(10),
+                    IsPaid = true
+                });
+            }
+            if (!db.Booking.Any(b => b.StartDate.Date != new DateTime(2023, 12, 18)))
+            {
+                db.Booking.Add(new Booking
+                {
+                    GuestId = 3,
+                    RoomId = 4,
+                    StartDate = new DateTime(2023, 12, 18),
+                    EndDate = new DateTime(2023, 12, 20),
+                    IsActive = true
+                });
+                db.Guest.First(g => g.Id == 3).Invoices.Add(new Invoice
+                {
+                    GuestId = 3,
+                    BookingId = 2,
+                    TotalSum = db.Room.First(r => r.Id == 4).Price * 3,
+                    PaidDate = new DateTime(2023, 12, 19),
+                    DueDate = new DateTime(2023, 12, 18).AddDays(10),
+                    IsPaid = true,
                 });
             }
             db.SaveChanges();

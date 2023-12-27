@@ -1,6 +1,5 @@
 ﻿using HotelApp.Core;
 using HotelApp.Data;
-using HotelApp.Migrations;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,12 +19,12 @@ namespace HotelApp.Core.Handlers
 
         public static void Delete(HotelContext db)
         {
+            var allInvoices = db.Invoice.ToList();
+            if (allInvoices.Count == 0) return;
             int invoiceIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a invoice\n ");
             Console.WriteLine("0. Back");
-            var allInvoices = db.Invoice.ToList();
-            if (allInvoices.Count == 0) return;
             Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Price - Paid off");
             allInvoices.ForEach(i =>
             {
@@ -38,7 +37,7 @@ namespace HotelApp.Core.Handlers
                 if (invoiceIndex == 0) return;
                 Console.WriteLine("Please enter an option");
             }
-            Invoice invoice = db.Invoice.First(cr => cr.Id == allInvoices[invoiceIndex - 1].Id);
+            Invoice invoice = db.Invoice.First(cr => cr.Id == invoiceIndex);
             Console.Write($"Are you sure to delete this invoice {invoice.Id}?(y/n) "); ;
             string? confirmInput = Console.ReadLine().ToLower();
             while (confirmInput != "y" && confirmInput != "n")
@@ -59,9 +58,9 @@ namespace HotelApp.Core.Handlers
         }
         public static void ShowAll(HotelContext db)
         {
-            int input = -1;
             var guestsWithInvoices = db.Guest.Include(g => g.Invoices).Where(g => g.Invoices.Count != 0).ToList();
             if (guestsWithInvoices.Count == 0) return;
+            int input = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all invoices\n ");
             Console.WriteLine("0. Exit");
@@ -73,10 +72,11 @@ namespace HotelApp.Core.Handlers
                 if (input == 0) return;
                 Console.WriteLine("Please enter an option (0-3)");
             }
+            Console.Clear();
+            Console.WriteLine("Hossen Hotel - Showing all invoices\n ");
             switch (input)
             {
                 case 1:
-
                     Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Sum - Paid off");
                     foreach (var g in guestsWithInvoices)
                     {
@@ -115,11 +115,11 @@ namespace HotelApp.Core.Handlers
 
         public static void PayInvoice(HotelContext db)
         {
+            var guestsWithInvoices = db.Guest.Include(g => g.Invoices).Where(g => g.Invoices.Any(i => !i.IsPaid)).ToList();
+            if (guestsWithInvoices.Count == 0) return;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Paying off an invoice\n");
             int input;
-            var guestsWithInvoices = db.Guest.Include(g => g.Invoices).Where(g => g.Invoices.Any(i => !i.IsPaid)).ToList();
-            if (guestsWithInvoices.Count == 0) return;
             foreach (var i in guestsWithInvoices)
             {
                 Console.WriteLine($"{i.Id}. {i.Name}");
@@ -146,6 +146,7 @@ namespace HotelApp.Core.Handlers
             Invoice invoice = db.Invoice.First(i => i.Id == input);
             Console.WriteLine("The invoice has been paid off.");
             invoice.IsPaid = true;
+            invoice.IsArchived = true;
             invoice.PaidDate = DateTime.Today;
             db.SaveChanges();
             Console.ReadKey();

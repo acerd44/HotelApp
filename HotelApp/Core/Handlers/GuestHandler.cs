@@ -21,7 +21,6 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new guest\n ");
             Console.WriteLine("0. Back");
-            Console.WriteLine("If you'd like to skip the prompt, just input a minus (-)\n");
             Console.Write("Enter the name of the guest: ");
             string? input = Console.ReadLine();
             int numberInput = -1;
@@ -32,7 +31,7 @@ namespace HotelApp.Core.Handlers
                 input = Console.ReadLine();
             }
             guest.Name = input;
-            Console.Write("Enter the address of the guest: ");
+            Console.Write("Enter the address of the guest:(optional) ");
             input = Console.ReadLine();
             while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input == "0")
             {
@@ -55,12 +54,12 @@ namespace HotelApp.Core.Handlers
 
         public static void Delete(HotelContext db)
         {
+            var allGuests = db.Guest.ToList();
+            if (allGuests.Count == 0) return;
             int guestIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a guest\n ");
             Console.WriteLine("0. Back");
-            var allGuests = db.Guest.ToList();
-            if (allGuests.Count == 0) return;
             Console.WriteLine("ID - Name");
             allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}"));
             Console.Write("Which guest would you like to delete? ");
@@ -73,27 +72,27 @@ namespace HotelApp.Core.Handlers
             Console.Write($"Are you sure you want to delete {guest.Name} as a guest?(y/n/h for hard delete) ");
             string? confirmInput = Console.ReadLine().ToLower();
             while (string.IsNullOrWhiteSpace(confirmInput) || string.IsNullOrEmpty(confirmInput)
-                || !(confirmInput == "y" || confirmInput== "n" || confirmInput == "h"))
+                || !(confirmInput == "y" || confirmInput == "n" || confirmInput == "h"))
             {
                 Console.WriteLine("Please follow the instructions.");
                 confirmInput = Console.ReadLine();
             }
             if (confirmInput == "y" || confirmInput == "h")
             {
-               
+
             }
             db.SaveChanges();
         }
 
         public static void Update(HotelContext db)
         {
+            var allGuests = db.Guest.ToList();
+            if (allGuests.Count == 0) return;
             string? input = string.Empty;
             int guestIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new guest\n ");
             Console.WriteLine("0. Back");
-            var allGuests = db.Guest.ToList();
-            if (allGuests.Count == 0) return;
             allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name} - active: {g.IsActive.ToString().ToLower()}"));
             Console.Write("Which guest would you like to edit? ");
             while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
@@ -172,11 +171,11 @@ namespace HotelApp.Core.Handlers
 
         public static void ShowAll(HotelContext db)
         {
+            var allGuests = db.Guest.ToList();
+            if (allGuests.Count == 0) return;
             int input = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all guests\n ");
-            var allGuests = db.Guest.ToList();
-            if (allGuests.Count == 0) return;
             Console.WriteLine("0. Exit");
             Console.WriteLine("1. Show all guests");
             Console.WriteLine("2. Only show active guests");
@@ -186,6 +185,7 @@ namespace HotelApp.Core.Handlers
                 if (input == 0) return;
                 Console.WriteLine("Please enter an option (0-3)");
             }
+            Console.Clear();
             Console.WriteLine("\nId - Name");
             switch (input)
             {

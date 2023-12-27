@@ -17,7 +17,9 @@ namespace HotelApp.Data
         public DateTime PaidDate { get; set; }
         public DateTime DueDate { get; set; }
         public int GuestId { get; set; }
+        public int BookingId { get; set; }
         public int TotalSum { get; set; }
         public bool IsPaid { get; set; }
+        public bool IsArchived { get; set; }
     }
 }

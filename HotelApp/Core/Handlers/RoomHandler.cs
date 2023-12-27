@@ -45,13 +45,13 @@ namespace HotelApp.Core.Handlers
 
         public static void Delete(HotelContext db)
         {
+            var allRooms = db.Room.ToList();
+            if (allRooms.Count == 0) return;
             int roomIndex = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a room\n ");
             Console.WriteLine("0. Back");
-            var allRooms = db.Room.ToList();
-            if (allRooms.Count == 0) return;
-            Console.WriteLine("Index - ID - Size - Beds");
+            Console.WriteLine("ID - Size - Beds");
             allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size} - {r.Beds} - {r.Price}"));
             Console.Write("Which room would you like to delete?");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
@@ -59,7 +59,7 @@ namespace HotelApp.Core.Handlers
                 if (roomIndex == 0) return;
                 Console.WriteLine($"Please enter an option.");
             }
-            Room room = db.Room.First(cr => cr.Id == allRooms[roomIndex - 1].Id);
+            Room room = db.Room.First(cr => cr.Id == roomIndex);
             Console.Write($"Are you sure you want to delete {room.Id}?(y/n) ");
             string? confirmInput = Console.ReadLine().ToLower();
             while (confirmInput != "y" && confirmInput != "n")
@@ -76,12 +76,12 @@ namespace HotelApp.Core.Handlers
 
         public static void Update(HotelContext db)
         {
+            var allRooms = db.Room.ToList();
+            if (allRooms.Count == 0) return;
             int roomIndex = -1, input = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new room\n ");
             Console.WriteLine("0. Back");
-            var allRooms = db.Room.ToList();
-            if (allRooms.Count == 0) return;
             allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size} - {r.Beds} - {r.Price}"));
             Console.Write("Which room would you like to edit?");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == input))
@@ -140,12 +140,14 @@ namespace HotelApp.Core.Handlers
 
         public static void ShowAll(HotelContext db)
         {
+            var allRooms = db.Room.ToList();
+            if (allRooms.Count == 0) return;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all rooms\n ");
             Console.WriteLine("Id - Size - Beds - Price");
-            db.Room.ToList().ForEach(r => Console.WriteLine($"{r.Id}. {r.Size} - {r.Beds} - {r.Price}"));
+            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size} - {r.Beds} - {r.Price}"));
+            Console.WriteLine("\nPress any button to continue.");
             Console.ReadKey();
         }
-
     }
 }

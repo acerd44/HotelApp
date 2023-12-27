@@ -17,5 +17,6 @@ namespace HotelApp.Data
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsActive { get; set; }
+        public bool IsArchived { get; set; }
     }
 }
