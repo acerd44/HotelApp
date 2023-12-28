@@ -16,12 +16,15 @@ namespace HotelApp.Core.Handlers
         {
             return;
         }
-
+        public static void Update(HotelContext db)
+        {
+            return;
+        }
         public static void Delete(HotelContext db)
         {
             var allInvoices = db.Invoice.ToList();
             if (allInvoices.Count == 0) return;
-            int invoiceIndex = -1;
+            int invoiceIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a invoice\n ");
             Console.WriteLine("0. Back");
@@ -52,15 +55,11 @@ namespace HotelApp.Core.Handlers
             }
         }
 
-        public static void Update(HotelContext db)
-        {
-            return;
-        }
         public static void ShowAll(HotelContext db)
         {
             var guestsWithInvoices = db.Guest.Include(g => g.Invoices).Where(g => g.Invoices.Count != 0).ToList();
             if (guestsWithInvoices.Count == 0) return;
-            int input = -1;
+            int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all invoices\n ");
             Console.WriteLine("0. Exit");

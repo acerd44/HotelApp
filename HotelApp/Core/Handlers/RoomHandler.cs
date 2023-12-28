@@ -14,7 +14,7 @@ namespace HotelApp.Core.Handlers
         public static void Create(HotelContext db)
         {
             var room = new Room();
-            int input = -1;
+            int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new room\n ");
             Console.WriteLine("0. Back");
@@ -48,7 +48,7 @@ namespace HotelApp.Core.Handlers
         {
             var allRooms = db.Room.ToList();
             if (allRooms.Count == 0) return;
-            int roomIndex = -1;
+            int roomIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a room\n ");
             Console.WriteLine("0. Back");
@@ -78,7 +78,7 @@ namespace HotelApp.Core.Handlers
         {
             var allRooms = db.Room.ToList();
             if (allRooms.Count == 0) return;
-            int roomIndex = -1, input = -1;
+            int roomIndex, input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a room\n ");
             Console.WriteLine("0. Back");

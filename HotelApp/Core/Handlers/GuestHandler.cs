@@ -24,7 +24,7 @@ namespace HotelApp.Core.Handlers
             Console.WriteLine("0. Back");
             Console.Write("Enter the name of the guest: ");
             string? input = Console.ReadLine();
-            int numberInput = -1;
+            int numberInput;
             while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input.Equals("0"))
             {
                 if (input.Equals("0")) return;
@@ -58,7 +58,7 @@ namespace HotelApp.Core.Handlers
         {
             var allGuests = db.Guest.ToList();
             if (allGuests.Count == 0) return;
-            int guestIndex = -1;
+            int guestIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a guest\n ");
             Console.WriteLine("0. Back");
@@ -106,7 +106,7 @@ namespace HotelApp.Core.Handlers
             var allGuests = db.Guest.ToList();
             if (allGuests.Count == 0) return;
             string? input = string.Empty;
-            int guestIndex = -1;
+            int guestIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new guest\n ");
             Console.WriteLine("0. Back");
@@ -160,7 +160,7 @@ namespace HotelApp.Core.Handlers
                     break;
                 case 3:
                     Console.Write("What would you like to change their phone number to?(between 6 and 12 digits) ");
-                    int numberInput = -1;
+                    int numberInput;
                     Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
                     while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$"))
                     {
@@ -177,7 +177,7 @@ namespace HotelApp.Core.Handlers
                         Console.WriteLine("Please enter Y/N");
                         input = Console.ReadLine();
                     }
-                    if (input.Equals("y") && !guest.IsActive)
+                    if (input.Equals("y") || !guest.IsActive)
                     {
                         guest.IsActive = true;
                     }
@@ -190,7 +190,7 @@ namespace HotelApp.Core.Handlers
         {
             var allGuests = db.Guest.ToList();
             if (allGuests.Count == 0) return;
-            int input = -1;
+            int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all guests\n ");
             Console.WriteLine("0. Exit");

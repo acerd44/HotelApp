@@ -15,7 +15,7 @@ namespace HotelApp.Core
     {
         public static void MainMenu(HotelContext db)
         {
-            int option = -1;
+            int option = 0;
             bool menu = true;
             while (menu)
             {
@@ -49,7 +49,7 @@ namespace HotelApp.Core
         }
         public static void CRUDMenu(HotelContext db)
         {
-            int option = -1;
+            int option = 0;
             bool menu = true;
             while (menu)
             {
@@ -83,7 +83,7 @@ namespace HotelApp.Core
         }
         public static void NewMenu(HotelContext db)
         {
-            int input = -1;
+            int input = 0;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - New booking\n");
             Console.WriteLine("0. Exit");
@@ -106,7 +106,7 @@ namespace HotelApp.Core
         }
         public static void GuestMenu(HotelContext db)
         {
-            int option = -1;
+            int option = 0;
             bool menu = true;
             while (menu)
             {
@@ -140,7 +140,7 @@ namespace HotelApp.Core
         }
         public static void RoomMenu(HotelContext db)
         {
-            int option = -1;
+            int option = 0;
             bool menu = true;
             while (menu)
             {
@@ -174,7 +174,7 @@ namespace HotelApp.Core
         }
         public static void BookingMenu(HotelContext db)
         {
-            int option = -1;
+            int option = 0;
             bool menu = true;
             while (menu)
             {
@@ -208,7 +208,7 @@ namespace HotelApp.Core
         }
         public static void InvoiceMenu(HotelContext db)
         {
-            int option = -1;
+            int option = 0;
             bool menu = true;
             while (menu)
             {

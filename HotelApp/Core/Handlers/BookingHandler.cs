@@ -33,7 +33,7 @@ namespace HotelApp.Core.Handlers
             var availableRooms = new List<Room>();
             var startDate = new DateTime();
             var endDate = new DateTime();
-            int input = -1, guests = -1;
+            int input = 0, guests;
             string? dateInput = string.Empty;
             bool firstCheck = false;
             Console.Clear();
@@ -197,7 +197,7 @@ namespace HotelApp.Core.Handlers
             if (showAll) allBookings = db.Booking.ToList();
             else allBookings = db.Booking.Where(b => !b.IsArchived).ToList();
             if (allBookings.Count == 0) return;
-            int bookingIndex = -1;
+            int bookingIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Cancelling a booking\n ");
             Console.WriteLine("0. Back");
@@ -239,7 +239,7 @@ namespace HotelApp.Core.Handlers
         {
             var allBookings = db.Booking.ToList();
             if (allBookings.Count == 0) return;
-            int bookingIndex = -1, input = -1;
+            int bookingIndex, input = 0;
             string? dateInput = string.Empty;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a booking\n ");
@@ -421,7 +421,7 @@ namespace HotelApp.Core.Handlers
         {
             var allBookings = db.Booking.ToList();
             if (allBookings.Count == 0) return;
-            int input = -1;
+            int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all bookings\n ");
             Console.WriteLine("0. Exit");
