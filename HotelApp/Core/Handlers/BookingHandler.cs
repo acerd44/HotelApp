@@ -18,17 +18,22 @@ namespace HotelApp.Core.Handlers
     {
         public static void Create(HotelContext db)
         {
-            return;
+            Create(db, null);
         }
-
+        public static void Delete(HotelContext db)
+        {
+            Delete(db, true);
+        }
         public static void Create(HotelContext db, Guest? existingGuest)
         {
             var booking = new Booking();
             var invoice = new Invoice();
             var guest = new Guest();
+            var recommendedRooms = new List<Room>();
+            var availableRooms = new List<Room>();
             var startDate = new DateTime();
             var endDate = new DateTime();
-            int input = -1;
+            int input = -1, guests = -1;
             string? dateInput = string.Empty;
             bool firstCheck = false;
             Console.Clear();
@@ -54,7 +59,13 @@ namespace HotelApp.Core.Handlers
                 booking.GuestId = existingGuest.Id;
                 guest = existingGuest;
             }
-            while (GetAvailableRooms(db, startDate, endDate).Count == 0)
+            Console.Write("How many will be staying at the hotel?(1-4) ");
+            while (!int.TryParse(Console.ReadLine(), out guests) || !Enumerable.Range(0, 5).Contains(guests))
+            {
+                if (input == 0) return;
+                Console.WriteLine("You may only have up to 4 guests. (1-4)");
+            }
+            while (RoomHandler.GetAvailableRooms(db, startDate, endDate).Count == 0)
             {
                 if (firstCheck)
                 {
@@ -65,14 +76,14 @@ namespace HotelApp.Core.Handlers
                 dateInput = Console.ReadLine().ToLower();
                 while (true)
                 {
-                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput == "0")
+                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
                     {
-                        if (dateInput == "0") return;
+                        if (dateInput.Equals("0")) return;
                         Console.WriteLine("Don't type empty entries");
                     }
                     else
                     {
-                        if (dateInput == "today")
+                        if (dateInput.Equals("today"))
                         {
                             startDate = DateTime.Today;
                             break;
@@ -91,16 +102,16 @@ namespace HotelApp.Core.Handlers
                             else Console.WriteLine("Make sure the start date isn't a date before than today");
                         }
                     }
-                    dateInput = Console.ReadLine();
+                    dateInput = Console.ReadLine().ToLower();
                 }
                 // end date
                 Console.Write("Write the end date of the booking:(YYYY-MM-DD) ");
-                dateInput = Console.ReadLine();
+                dateInput = Console.ReadLine().ToLower();
                 while (true)
                 {
-                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput == "0")
+                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
                     {
-                        if (dateInput == "0") return;
+                        if (dateInput.Equals("0")) return;
                         Console.WriteLine("Don't type empty entries");
                     }
                     else
@@ -120,18 +131,49 @@ namespace HotelApp.Core.Handlers
                             else Console.WriteLine("Make sure the end date isn't a date earlier than today");
                         }
                     }
-                    dateInput = Console.ReadLine();
+                    dateInput = Console.ReadLine().ToLower();
                 }
+                recommendedRooms = RoomHandler.GetRecommendedRooms(db, startDate, endDate, guests);
+                availableRooms = RoomHandler.GetAvailableRooms(db, startDate, endDate);
+            }
+            var activeBookings = db.Booking.Where(b => b.GuestId == guest.Id && b.IsActive).ToList();
+            if (activeBookings.Count > 0)
+            {
+                activeBookings.ForEach(b =>
+                {
+                    if ((startDate >= b.StartDate && startDate <= b.EndDate)
+                    || (endDate >= b.StartDate && endDate <= b.EndDate)
+                    || (startDate <= b.StartDate && endDate >= b.EndDate))
+                    {
+                        Console.WriteLine("\nYou can't have another booking during an active one.");
+                        Console.WriteLine("If you'd like to try another date, enter 'yes' or 'y'");
+                        string? tryAnotherDate = Console.ReadLine().ToLower();
+                        if (tryAnotherDate.Equals("yes") || tryAnotherDate.Equals("y")) Create(db, guest);
+                        else return;
+                    }
+                });
             }
             booking.StartDate = startDate;
             booking.EndDate = endDate;
             if (startDate == DateTime.Today) booking.IsActive = true;
-            Console.WriteLine("Available rooms: - Room ID. Size, Beds, Price");
-            GetAvailableRooms(db, startDate, endDate).ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}, {r.Beds}, {r.Price}"));
-            Console.Write("Write the room id of the booking: ");
-            while (!int.TryParse(Console.ReadLine(), out input) || !db.Room.Any(r => r.Id == input))
+            Console.Clear();
+            Console.WriteLine("To find availability of other rooms with less/more guests and/or dates, enter -10");
+            Console.WriteLine("To exit, enter 0");
+            Console.WriteLine("\nRoom ID. Size, Beds, Extra Beds, Price");
+            //availableRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2, {r.Beds}, {r.ExtraBeds}, {r.Price}kr"));
+            if (recommendedRooms.Count > 0)
+            {
+                Console.WriteLine("\nRecommended room(s) based on how many will be staying:");
+                recommendedRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2, {r.Beds}, {r.ExtraBeds}, {r.Price}kr"));
+            }
+            Console.WriteLine("\nIf you'd like to see all available rooms at this date, enter 'yes' or 'y'");
+            string? seeAll = Console.ReadLine().ToLower();
+            if (seeAll.Equals("yes") || seeAll.Equals("y")) availableRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2, {r.Beds}, {r.ExtraBeds}, {r.Price}kr"));
+            Console.Write("\nWrite the room id of the booking: ");
+            while (!int.TryParse(Console.ReadLine(), out input) || !availableRooms.Any(r => r.Id == input))
             {
                 if (input == 0) return;
+                if (input == -10) Create(db, guest);
                 Console.WriteLine("Please enter the correct option.");
             }
             booking.RoomId = input;
@@ -140,6 +182,7 @@ namespace HotelApp.Core.Handlers
             invoice.GuestId = booking.GuestId;
             invoice.DueDate = booking.StartDate.AddDays(10);
             invoice.IsPaid = false;
+            invoice.IsArchived = false;
             invoice.TotalSum = (int)Math.Ceiling((booking.EndDate - booking.StartDate).TotalDays)
                 * db.Room.First(r => r.Id == booking.RoomId).Price;
             //db.Invoice.Add(invoice);
@@ -148,45 +191,48 @@ namespace HotelApp.Core.Handlers
             db.SaveChanges();
         }
 
-        public static void Delete(HotelContext db)
+        public static void Delete(HotelContext db, bool showAll)
         {
-            var allBookings = db.Booking.ToList();
+            List<Booking> allBookings = new();
+            if (showAll) allBookings = db.Booking.ToList();
+            else allBookings = db.Booking.Where(b => !b.IsArchived).ToList();
             if (allBookings.Count == 0) return;
-            string? confirmInput = string.Empty;
             int bookingIndex = -1;
             Console.Clear();
-            Console.WriteLine("Hossen Hotel - Deleting a booking\n ");
+            Console.WriteLine("Hossen Hotel - Cancelling a booking\n ");
             Console.WriteLine("0. Back");
             Console.WriteLine("ID - Guest - Room ID - Start Date - End Date");
             allBookings.ForEach(b => Console.WriteLine($"{b.Id} - {db.Guest.First(g => g.Id == b.GuestId).Name} - " +
                 $"{b.RoomId} - {b.StartDate.ToShortDateString()} - {b.EndDate.ToShortDateString()}"));
-            Console.Write("Which booking would you like to delete? ");
+            Console.Write("Which booking would you like to cancel? ");
             while (!int.TryParse(Console.ReadLine(), out bookingIndex) || !allBookings.Any(b => b.Id == bookingIndex))
             {
                 if (bookingIndex == 0) return;
                 Console.WriteLine($"Please enter an option");
             }
             Booking booking = db.Booking.First(b => b.Id == bookingIndex);
+            Invoice invoice = db.Invoice.First(i => i.BookingId == booking.Id);
             Console.WriteLine("\nKeep in mind this will delete invoices related to the booking.\n");
-            Console.Write($"Are you sure you want to delete Booking {booking.Id} as a booking?(y/n/h - hard delete) ");
-            confirmInput = Console.ReadLine().ToLower();
+            Console.Write($"Are you sure you want to cancel Booking {booking.Id} as a booking?(y/n/h - hard delete) ");
+            string? confirmInput = Console.ReadLine().ToLower();
             while (string.IsNullOrWhiteSpace(confirmInput) || string.IsNullOrEmpty(confirmInput)
-                || !(confirmInput == "y" || confirmInput == "n" || confirmInput == "h"))
+                || !(confirmInput.Equals("y") || confirmInput.Equals("n") || confirmInput.Equals("h")))
             {
                 Console.WriteLine("Please follow the instructions.");
-                confirmInput = Console.ReadLine();
+                confirmInput = Console.ReadLine().ToLower();
             }
-            if (confirmInput == "y")
+            if (confirmInput.Equals("y"))
             {
-                db.Invoice.First(i => i.BookingId == booking.Id);
+                invoice.IsArchived = true;
                 booking.IsActive = false;
-                db.SaveChanges();
+                booking.IsArchived = true;
             }
-            else if (confirmInput == "h")
+            else if (confirmInput.Equals("h"))
             {
+                db.Invoice.Remove(invoice);
                 db.Booking.Remove(booking);
-                db.SaveChanges();
             }
+            db.SaveChanges();
         }
 
         public static void Update(HotelContext db)
@@ -198,8 +244,8 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a booking\n ");
             Console.WriteLine("0. Back");
-            allBookings.Where(b => b.EndDate > DateTime.Today).ToList().ForEach(b => Console.WriteLine($"{b.Id} - {db.Guest.First(g => g.Id == b.GuestId).Name} - " +
-                $"{b.RoomId} - {b.StartDate.ToShortDateString()} - {b.EndDate.ToShortDateString()}"));
+            allBookings.Where(b => b.EndDate > DateTime.Today && !b.IsArchived).ToList().ForEach(b => Console.WriteLine($"{b.Id} - " +
+                $"{db.Guest.First(g => g.Id == b.GuestId).Name} - {b.RoomId} - {b.StartDate.ToShortDateString()} - {b.EndDate.ToShortDateString()}"));
             Console.Write("Which booking would you like to edit? ");
             while (!int.TryParse(Console.ReadLine(), out bookingIndex) || !allBookings.Any(b => b.Id == bookingIndex))
             {
@@ -208,7 +254,6 @@ namespace HotelApp.Core.Handlers
             }
             Booking booking = db.Booking.First(b => b.Id == bookingIndex);
             Invoice invoice = db.Invoice.First(i => i.BookingId == booking.Id);
-
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting booking {booking.Id}\n ");
             Console.WriteLine("0. Back");
@@ -239,7 +284,7 @@ namespace HotelApp.Core.Handlers
                     booking.GuestId = input;
                     break;
                 case 2:
-                    var availableRooms = GetAvailableRooms(db, booking.StartDate, booking.EndDate);
+                    var availableRooms = RoomHandler.GetAvailableRooms(db, booking.StartDate, booking.EndDate);
                     if (availableRooms.Count == 0)
                     {
                         Console.WriteLine("There are no current rooms available under the bookings dates, press any button to continue.");
@@ -248,7 +293,7 @@ namespace HotelApp.Core.Handlers
                     }
                     Console.Write("What would you like to change the room ID to? ");
                     Console.WriteLine("ID - Size - Beds - Price");
-                    availableRooms.ForEach(r => Console.WriteLine($"{r.Id} - {r.Size} - {r.Beds} - {r.Price}"));
+                    availableRooms.ForEach(r => Console.WriteLine($"{r.Id} - {r.Size}m^2 - {r.Beds} - {r.Price}kr"));
                     while (!int.TryParse(Console.ReadLine(), out input) || !availableRooms.Any(r => r.Id == input))
                     {
                         if (input == 0) return;
@@ -285,16 +330,16 @@ namespace HotelApp.Core.Handlers
                     dateInput = Console.ReadLine().ToLower();
                     while (true)
                     {
-                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput == "0")
+                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
                         {
-                            if (dateInput == "0") return;
+                            if (dateInput.Equals("0")) return;
                             Console.WriteLine("Don't type empty entries");
                         }
                         else
                         {
-                            if (dateInput == "today" && DateTime.Today < booking.StartDate.Date && DateTime.Today < booking.EndDate.Date)
+                            if (dateInput.Equals("today") && DateTime.Today < booking.StartDate.Date && DateTime.Today < booking.EndDate.Date)
                             {
-                                if (CheckSpecificRoomAvailability(db, booking.RoomId, DateTime.Today, booking.EndDate, booking.Id))
+                                if (RoomHandler.CheckSpecificRoomAvailability(db, booking.RoomId, DateTime.Today, booking.EndDate, booking.Id))
                                 {
                                     booking.StartDate = DateTime.Now;
                                     booking.IsActive = true;
@@ -304,14 +349,14 @@ namespace HotelApp.Core.Handlers
                             }
                             if (!DateTime.TryParseExact(dateInput, "yyyy-MM-dd", CultureInfo.CurrentCulture, DateTimeStyles.None, out _))
                             {
-                                if (dateInput != "today")
+                                if (!dateInput.Equals("today"))
                                     Console.WriteLine("Please use the correct format yyyy-mm-dd");
                             }
                             else
                             {
                                 if (DateTime.Parse(dateInput) > DateTime.Today && DateTime.Parse(dateInput) < booking.EndDate.Date)
                                 {
-                                    if (CheckSpecificRoomAvailability(db, booking.RoomId, DateTime.Parse(dateInput), booking.EndDate, booking.Id))
+                                    if (RoomHandler.CheckSpecificRoomAvailability(db, booking.RoomId, DateTime.Parse(dateInput), booking.EndDate, booking.Id))
                                     {
                                         booking.StartDate = DateTime.Parse(dateInput);
                                         break;
@@ -321,7 +366,7 @@ namespace HotelApp.Core.Handlers
                                 else Console.WriteLine("Make sure the start date isn't a date before than today or isn't same as end date");
                             }
                         }
-                        dateInput = Console.ReadLine();
+                        dateInput = Console.ReadLine().ToLower();
                     }
                     break;
                 case 4:
@@ -336,12 +381,12 @@ namespace HotelApp.Core.Handlers
                     db.Booking.Where(b => b.GuestId != booking.GuestId).ToList().ForEach(r => Console.WriteLine($"{r.Id} " +
                         $"- Start: {r.StartDate.ToShortDateString()} - End: {r.EndDate.ToShortDateString()}"));
                     Console.Write("\nWrite the new end date of the booking:(YYYY-MM-DD) ");
-                    dateInput = Console.ReadLine();
+                    dateInput = Console.ReadLine().ToLower();
                     while (true)
                     {
-                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput == "0")
+                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
                         {
-                            if (dateInput == "0") return;
+                            if (dateInput.Equals("0")) return;
                             Console.WriteLine("Don't type empty entries");
                         }
                         else
@@ -354,7 +399,7 @@ namespace HotelApp.Core.Handlers
                             {
                                 if (DateTime.Parse(dateInput) > DateTime.Today && booking.StartDate.Date < DateTime.Parse(dateInput))
                                 {
-                                    if (CheckSpecificRoomAvailability(db, booking.RoomId, booking.StartDate, DateTime.Parse(dateInput), booking.Id))
+                                    if (RoomHandler.CheckSpecificRoomAvailability(db, booking.RoomId, booking.StartDate, DateTime.Parse(dateInput), booking.Id))
                                     {
                                         booking.EndDate = DateTime.Parse(dateInput).AddDays(1).AddTicks(-1);
                                         invoice.TotalSum = (int)Math.Ceiling((booking.EndDate - booking.StartDate).TotalDays)
@@ -366,7 +411,7 @@ namespace HotelApp.Core.Handlers
                                 else Console.WriteLine("Make sure the end date isn't a date earlier than today");
                             }
                         }
-                        dateInput = Console.ReadLine();
+                        dateInput = Console.ReadLine().ToLower();
                     }
                     break;
             }
@@ -376,42 +421,47 @@ namespace HotelApp.Core.Handlers
         {
             var allBookings = db.Booking.ToList();
             if (allBookings.Count == 0) return;
+            int input = -1;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all bookings\n ");
-            Console.WriteLine("Id - Guest - Room ID - Start Date - End Date");
-            allBookings.ForEach(b => Console.WriteLine($"{b.Id}. {db.Guest.First(g => g.Id == b.GuestId).Name} " +
-                $"- {b.RoomId} - {b.StartDate.Date.ToShortDateString()} - {b.EndDate.ToShortDateString()} - active: {b.IsActive.ToString().ToLower()}"));
+            Console.WriteLine("0. Exit");
+            Console.WriteLine("1. Show all bookings");
+            Console.WriteLine("2. Only show archived bookings");
+            Console.WriteLine("3. Only show unarchived bookings");
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 4).Contains(input))
+            {
+                if (input == 0) return;
+                Console.WriteLine("Please enter an option (0-3)");
+            }
+            Console.Clear();
+            switch (input)
+            {
+                case 1:
+                    Console.Clear();
+                    Console.WriteLine("Id - Guest - Room ID - Start Date - End Date - Active - Archived");
+                    allBookings.ForEach(b => Console.WriteLine($"{b.Id}. {db.Guest.First(g => g.Id == b.GuestId).Name} " +
+                        $"- {b.RoomId} - {b.StartDate.Date.ToShortDateString()} - {b.EndDate.ToShortDateString()} " +
+                        $"- active: {b.IsActive.ToString().ToLower()} - archived: {b.IsArchived.ToString().ToLower()}"));
+                    break;
+                case 2:
+                    Console.WriteLine("Id - Guest - Room ID - Start Date - End Date");
+                    allBookings.Where(b => b.IsArchived)
+                        .ToList()
+                        .ForEach(b => Console.WriteLine($"{b.Id}. {db.Guest.First(g => g.Id == b.GuestId).Name} " +
+                        $"- {b.RoomId} - {b.StartDate.Date.ToShortDateString()} - {b.EndDate.ToShortDateString()}"));
+                    break;
+                case 3:
+                    Console.WriteLine("Id - Guest - Room ID - Start Date - End Date");
+                    allBookings.Where(b => !b.IsArchived)
+                        .ToList()
+                        .ForEach(b => Console.WriteLine($"{b.Id}. {db.Guest.First(g => g.Id == b.GuestId).Name} " +
+                        $"- {b.RoomId} - {b.StartDate.Date.ToShortDateString()} - {b.EndDate.ToShortDateString()}"));
+                    break;
+                case 0:
+                    return;
+            }
             Console.WriteLine("\nPress any button to continue.");
             Console.ReadKey();
-        }
-        /// <summary>
-        /// Checks if the room related to the <paramref name="roomId"/> is available between <paramref name="startDate"/> and <paramref name="endDate"/>
-        /// </summary>
-        /// <param name="db"></param>
-        /// <param name="roomId"></param>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
-        /// <returns></returns>
-        public static bool CheckSpecificRoomAvailability(HotelContext db, int roomId, DateTime startDate, DateTime endDate)
-        {
-            if (startDate == DateTime.MinValue || endDate == DateTime.MinValue) return false; // Return false in case there is no given startDate or endDate
-            return !db.Booking.Where(b => b.RoomId == roomId).Any(b =>
-            (startDate >= b.StartDate && startDate <= b.EndDate)
-            || (endDate >= b.StartDate && endDate <= b.EndDate)
-            || (startDate <= b.StartDate && endDate >= b.EndDate));
-        }
-        public static bool CheckSpecificRoomAvailability(HotelContext db, int roomId, DateTime startDate, DateTime endDate, int bookingToExlude)
-        {
-            if (startDate == DateTime.MinValue || endDate == DateTime.MinValue) return false; // Return false in case there is no given startDate or endDate
-            return !db.Booking.Where(b => b.RoomId == roomId && b.Id != bookingToExlude)
-                .Any(b => (startDate >= b.StartDate && startDate <= b.EndDate)
-            || (endDate >= b.StartDate && endDate <= b.EndDate)
-            || (startDate <= b.StartDate && endDate >= b.EndDate));
-        }
-        public static List<Room> GetAvailableRooms(HotelContext db, DateTime startDate, DateTime endDate)
-        {
-            var rooms = db.Room.ToList();
-            return rooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate)).ToList();
         }
     }
 }

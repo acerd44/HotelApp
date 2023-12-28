@@ -40,12 +40,12 @@ namespace HotelApp.Core.Handlers
             Invoice invoice = db.Invoice.First(cr => cr.Id == invoiceIndex);
             Console.Write($"Are you sure to delete this invoice {invoice.Id}?(y/n) "); ;
             string? confirmInput = Console.ReadLine().ToLower();
-            while (confirmInput != "y" && confirmInput != "n")
+            while (!confirmInput.Equals("y") || !confirmInput.Equals("n"))
             {
                 Console.WriteLine("Please enter Y/N");
-                confirmInput = Console.ReadLine();
+                confirmInput = Console.ReadLine().ToLower();
             }
-            if (confirmInput.ToLower() == "y")
+            if (confirmInput.Equals("y"))
             {
                 db.Invoice.Remove(invoice);
                 db.SaveChanges();
@@ -67,10 +67,11 @@ namespace HotelApp.Core.Handlers
             Console.WriteLine("1. Show all invoices");
             Console.WriteLine("2. Only show paid invoices");
             Console.WriteLine("3. Only show unpaid invoices");
-            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 4).Contains(input))
+            Console.WriteLine("4. Only show archived invoices");
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 5).Contains(input))
             {
                 if (input == 0) return;
-                Console.WriteLine("Please enter an option (0-3)");
+                Console.WriteLine("Please enter an option (0-4)");
             }
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all invoices\n ");
@@ -91,7 +92,7 @@ namespace HotelApp.Core.Handlers
                     Console.WriteLine("ID - Guest - Due Date - Total Sum");
                     foreach (var g in guestsWithInvoices)
                     {
-                        if (!g.Invoices.Any(i => i.IsPaid)) return;
+                        if (!g.Invoices.Any(i => i.IsPaid)) continue;
                         foreach (var i in g.Invoices.Where(i => i.IsPaid))
                         {
                             Console.WriteLine($"{i.Id}. {g.Name} - {i.DueDate.ToShortDateString()} - {i.TotalSum}");
@@ -102,20 +103,34 @@ namespace HotelApp.Core.Handlers
                     Console.WriteLine("ID - Guest - Due Date - Total Sum");
                     foreach (var g in guestsWithInvoices)
                     {
-                        if (g.Invoices.Any(i => i.IsPaid)) return;
+                        if (g.Invoices.Any(i => i.IsPaid)) continue;
                         foreach (var i in g.Invoices.Where(i => !i.IsPaid))
                         {
                             Console.WriteLine($"{i.Id}. {g.Name} - {i.DueDate.ToShortDateString()} - {i.TotalSum}");
                         }
                     }
                     break;
+                case 4:
+                    Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Sum - Paid off");
+                    foreach (var g in guestsWithInvoices)
+                    {
+                        if (!g.Invoices.Any(i => i.IsArchived)) continue;
+                        foreach (var i in g.Invoices.Where(i => i.IsArchived))
+                        {
+                            var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "N/A";
+                            Console.WriteLine($"{i.Id}. {g.Name} - {paidDate} - {i.DueDate.ToShortDateString()} - {i.TotalSum} - {i.IsPaid}");
+                        }
+                    }
+                    break;
             }
             Console.ReadKey();
         }
-
         public static void PayInvoice(HotelContext db)
         {
-            var guestsWithInvoices = db.Guest.Include(g => g.Invoices).Where(g => g.Invoices.Any(i => !i.IsPaid)).ToList();
+            var guestsWithInvoices = db.Guest
+                .Include(g => g.Invoices)
+                .Where(g => g.Invoices.Any(i => !i.IsPaid))
+                .ToList();
             if (guestsWithInvoices.Count == 0) return;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Paying off an invoice\n");

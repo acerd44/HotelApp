@@ -4,6 +4,7 @@ using HotelApp.Core;
 using HotelApp.Data;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,18 +25,19 @@ namespace HotelApp.Core.Handlers
             Console.Write("Enter the name of the guest: ");
             string? input = Console.ReadLine();
             int numberInput = -1;
-            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input == "0")
+            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input.Equals("0"))
             {
-                if (input == "0") return;
+                if (input.Equals("0")) return;
                 Console.WriteLine("Please follow the instructions.");
                 input = Console.ReadLine();
             }
-            guest.Name = input;
-            Console.Write("Enter the address of the guest:(optional) ");
+            // Removes white space and makes sure spaces between words aren't being removed. Also capitalizes first letter of the word(s)
+            guest.Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.Trim().ToLower());
+            Console.Write("Enter the address of the guest:(optional, enter a - if you do not wish to provide an address) ");
             input = Console.ReadLine();
-            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input == "0")
+            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input.Equals("0"))
             {
-                if (input == "0") return;
+                if (input.Equals("0")) return;
                 Console.WriteLine("Please follow the instructions.");
                 input = Console.ReadLine();
             }
@@ -69,17 +71,32 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine($"Please enter an option");
             }
             Guest guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
+            Console.WriteLine("\nKeep in mind this will delete bookings/invoices related to the guest.\n");
             Console.Write($"Are you sure you want to delete {guest.Name} as a guest?(y/n/h for hard delete) ");
             string? confirmInput = Console.ReadLine().ToLower();
             while (string.IsNullOrWhiteSpace(confirmInput) || string.IsNullOrEmpty(confirmInput)
-                || !(confirmInput == "y" || confirmInput == "n" || confirmInput == "h"))
+                || !(confirmInput.Equals("y") || confirmInput.Equals("n") || confirmInput.Equals("h")))
             {
                 Console.WriteLine("Please follow the instructions.");
                 confirmInput = Console.ReadLine();
             }
-            if (confirmInput == "y" || confirmInput == "h")
+            var guestBookings = db.Booking.Where(b => b.Id == guest.Id).ToList();
+            var guestInvoices = db.Invoice.Where(i => i.Id == guest.Id).ToList();
+            if (confirmInput.Equals("y"))
             {
-
+                guestBookings.ForEach(b =>
+                {
+                    b.IsActive = false;
+                    b.IsArchived = true;
+                });
+                guestInvoices.ForEach(i => i.IsArchived = true);
+                guest.IsActive = false;
+            }
+            if (confirmInput.Equals("h"))
+            {
+                guestInvoices.ForEach(i => db.Invoice.Remove(i));
+                guestBookings.ForEach(b => db.Booking.Remove(b));
+                db.Guest.Remove(guest);
             }
             db.SaveChanges();
         }
@@ -127,16 +144,16 @@ namespace HotelApp.Core.Handlers
                     Console.Write("What would you like to change their name to? ");
                     while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input.Any(char.IsDigit))
                     {
-                        if (input == "0") return;
+                        if (input.Equals("0")) return;
                         Console.WriteLine("Please enter a name without numbers.");
                     }
-                    guest.Name = input;
+                    guest.Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.Trim().ToLower());
                     break;
                 case 2:
                     Console.Write("What would you like to change their address to? ");
-                    while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input == "0")
+                    while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input.Equals("0"))
                     {
-                        if (input == "0") return;
+                        if (input.Equals("0")) return;
                         Console.WriteLine("Please enter an address.");
                     }
                     guest.Address = input;
@@ -155,12 +172,12 @@ namespace HotelApp.Core.Handlers
                 case 4:
                     Console.Write("Would you like to activate this guest?(y/n) ");
                     input = Console.ReadLine().ToLower();
-                    while (input != "y" && input != "n")
+                    while (!input.Equals("y") || !input.Equals("n"))
                     {
                         Console.WriteLine("Please enter Y/N");
                         input = Console.ReadLine();
                     }
-                    if (input == "y" && !guest.IsActive)
+                    if (input.Equals("y") && !guest.IsActive)
                     {
                         guest.IsActive = true;
                     }
@@ -193,10 +210,14 @@ namespace HotelApp.Core.Handlers
                     allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber} - active: {g.IsActive.ToString().ToLower()}"));
                     break;
                 case 2:
-                    allGuests.Where(g => g.IsActive).ToList().ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
+                    allGuests.Where(g => g.IsActive)
+                        .ToList()
+                        .ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
                     break;
                 case 3:
-                    allGuests.Where(g => !g.IsActive).ToList().ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
+                    allGuests.Where(g => !g.IsActive)
+                        .ToList()
+                        .ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
                     break;
                 case 0:
                     return;

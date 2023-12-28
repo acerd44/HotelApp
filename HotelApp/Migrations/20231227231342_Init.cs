@@ -53,9 +53,8 @@ namespace HotelApp.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Size = table.Column<int>(type: "int", nullable: false),
                     Beds = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<int>(type: "int", nullable: false),
-                    GuestId = table.Column<int>(type: "int", nullable: false),
-                    IsOccupied = table.Column<bool>(type: "bit", nullable: false)
+                    ExtraBeds = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

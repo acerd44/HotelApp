@@ -130,11 +130,8 @@ namespace HotelApp.Migrations
                     b.Property<int>("Beds")
                         .HasColumnType("int");
 
-                    b.Property<int>("GuestId")
+                    b.Property<int>("ExtraBeds")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsOccupied")
-                        .HasColumnType("bit");
 
                     b.Property<int>("Price")
                         .HasColumnType("int");

@@ -24,8 +24,9 @@ namespace HotelApp.Core
                 Console.WriteLine("0. Exit");
                 Console.WriteLine("1. New booking");
                 Console.WriteLine("2. Pay invoice");
-                Console.WriteLine("\n\n3. CRUD");
-                RequestEntryWithinRange("", ref option, 4);
+                Console.WriteLine("3. Cancel booking");
+                Console.WriteLine("\n\n4. CRUD");
+                RequestEntryWithinRange("", ref option, 5);
                 switch (option)
                 {
                     case 1:
@@ -35,6 +36,9 @@ namespace HotelApp.Core
                         InvoiceHandler.PayInvoice(db);
                         break;
                     case 3:
+                        BookingHandler.Delete(db, false);
+                        break;
+                    case 4:
                         CRUDMenu(db);
                         break;
                     case 0:
@@ -43,7 +47,6 @@ namespace HotelApp.Core
                 }
             }
         }
-
         public static void CRUDMenu(HotelContext db)
         {
             int option = -1;
@@ -78,7 +81,6 @@ namespace HotelApp.Core
                 }
             }
         }
-
         public static void NewMenu(HotelContext db)
         {
             int input = -1;
@@ -102,7 +104,6 @@ namespace HotelApp.Core
                 }
             }
         }
-
         public static void GuestMenu(HotelContext db)
         {
             int option = -1;
@@ -188,7 +189,7 @@ namespace HotelApp.Core
                 switch (option)
                 {
                     case 1:
-                        BookingHandler.Create(db, null);
+                        BookingHandler.Create(db);
                         break;
                     case 2:
                         BookingHandler.Delete(db);
@@ -239,61 +240,6 @@ namespace HotelApp.Core
                 }
             }
         }
-        public static void RequestEntry(string request, ref string input)
-        {
-            if (input == "0") return;
-            Console.Write(request);
-            input = Console.ReadLine();
-            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input))
-            {
-                Console.WriteLine("Please follow the instructions.");
-                input = Console.ReadLine();
-            }
-        }
-        public static void RequestEntry(string request, ref int input)
-        {
-            Console.Write(request);
-            while (!int.TryParse(Console.ReadLine(), out input))
-            {
-                if (input == 0) return;
-                Console.WriteLine("Please follow the instructions.");
-            }
-        }
-        public static void RequestDateEntry(string request, ref string dateInput, bool startDate)
-        {
-            Console.Write(request);
-            dateInput = Console.ReadLine();
-            while (true)
-            {
-                if (dateInput == "0") return;
-                if (string.IsNullOrEmpty(dateInput))
-                {
-                    Console.WriteLine("Don't type empty entries.");
-                }
-                else
-                {
-                    if (dateInput.ToLower() == "today" && startDate) break;
-                    if (!DateTime.TryParseExact(dateInput, "yyyy-MM-dd", CultureInfo.CurrentCulture, DateTimeStyles.None, out _))
-                    {
-                        Console.WriteLine("Please use the correct format yyyy-mm-dd");
-                    }
-                    else
-                    {
-                        if (!startDate)
-                        {
-                            if (DateTime.Parse(dateInput) > DateTime.Today) break;
-                            else Console.WriteLine("Make sure the end date isn't a date earlier than today");
-                        }
-                        else
-                        {
-                            if (DateTime.Parse(dateInput) >= DateTime.Today) break;
-                            else Console.WriteLine("Make sure the start date isn't a date before than today");
-                        }
-                    }
-                }
-                dateInput = Console.ReadLine();
-            }
-        }
         public static void RequestEntryWithinRange(string request, ref int input, int range)
         {
             Console.Write(request);
@@ -301,17 +247,6 @@ namespace HotelApp.Core
             {
                 if (input == 0) return;
                 Console.WriteLine($"Please enter an option (0-{range})");
-            }
-        }
-        public static void RequestConfirmation(string request, ref string input)
-        {
-            if (input == "0") return;
-            Console.Write(request);
-            input = Console.ReadLine().ToLower();
-            while (input != "y" && input != "n")
-            {
-                Console.WriteLine("Please enter Y/N");
-                input = Console.ReadLine();
             }
         }
     }

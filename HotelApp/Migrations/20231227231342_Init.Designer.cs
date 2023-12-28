@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelApp.Migrations
 {
     [DbContext(typeof(HotelContext))]
-    [Migration("20231227173556_Init")]
+    [Migration("20231227231342_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -133,11 +133,8 @@ namespace HotelApp.Migrations
                     b.Property<int>("Beds")
                         .HasColumnType("int");
 
-                    b.Property<int>("GuestId")
+                    b.Property<int>("ExtraBeds")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsOccupied")
-                        .HasColumnType("bit");
 
                     b.Property<int>("Price")
                         .HasColumnType("int");

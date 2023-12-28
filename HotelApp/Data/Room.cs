@@ -16,11 +16,11 @@ namespace HotelApp.Data
         [Range(15, 40)]
         public int Size { get; set; }
         [Required]
-        [Range(1, 4)]
+        [Range(1, 2)]
         public int Beds { get; set; }
+        [Range(1, 2)]
+        public int ExtraBeds { get; set; }
         [Required]
         public int Price { get; set; }
-        public int GuestId { get; set; }
-        public bool IsOccupied { get; set; }
     }
 }

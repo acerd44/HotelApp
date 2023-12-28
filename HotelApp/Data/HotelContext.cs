@@ -17,13 +17,10 @@ namespace HotelApp.Data
 
         public HotelContext()
         {
-
         }
-
         public HotelContext(DbContextOptions<HotelContext> options) : base(options)
         {
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
