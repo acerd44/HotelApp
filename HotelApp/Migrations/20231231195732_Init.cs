@@ -12,24 +12,6 @@ namespace HotelApp.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Booking",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    GuestId = table.Column<int>(type: "int", nullable: false),
-                    RoomId = table.Column<int>(type: "int", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    IsArchived = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Booking", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Guest",
                 columns: table => new
                 {
@@ -62,6 +44,37 @@ namespace HotelApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Booking",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Guests = table.Column<int>(type: "int", nullable: false),
+                    GuestId = table.Column<int>(type: "int", nullable: false),
+                    RoomId = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Booking", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Booking_Guest_GuestId",
+                        column: x => x.GuestId,
+                        principalTable: "Guest",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Booking_Room_RoomId",
+                        column: x => x.RoomId,
+                        principalTable: "Room",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Invoice",
                 columns: table => new
                 {
@@ -69,22 +82,43 @@ namespace HotelApp.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PaidDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    GuestId = table.Column<int>(type: "int", nullable: false),
                     BookingId = table.Column<int>(type: "int", nullable: false),
                     TotalSum = table.Column<int>(type: "int", nullable: false),
                     IsPaid = table.Column<bool>(type: "bit", nullable: false),
-                    IsArchived = table.Column<bool>(type: "bit", nullable: false)
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false),
+                    GuestId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Invoice", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Invoice_Booking_BookingId",
+                        column: x => x.BookingId,
+                        principalTable: "Booking",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Invoice_Guest_GuestId",
                         column: x => x.GuestId,
                         principalTable: "Guest",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_GuestId",
+                table: "Booking",
+                column: "GuestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_RoomId",
+                table: "Booking",
+                column: "RoomId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Invoice_BookingId",
+                table: "Invoice",
+                column: "BookingId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invoice_GuestId",
@@ -96,16 +130,16 @@ namespace HotelApp.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Booking");
-
-            migrationBuilder.DropTable(
                 name: "Invoice");
 
             migrationBuilder.DropTable(
-                name: "Room");
+                name: "Booking");
 
             migrationBuilder.DropTable(
                 name: "Guest");
+
+            migrationBuilder.DropTable(
+                name: "Room");
         }
     }
 }

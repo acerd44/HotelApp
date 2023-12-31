@@ -36,6 +36,9 @@ namespace HotelApp.Migrations
                     b.Property<int>("GuestId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Guests")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -49,6 +52,10 @@ namespace HotelApp.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GuestId");
+
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Booking");
                 });
@@ -97,7 +104,7 @@ namespace HotelApp.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("GuestId")
+                    b.Property<int?>("GuestId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsArchived")
@@ -113,6 +120,8 @@ namespace HotelApp.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
 
                     b.HasIndex("GuestId");
 
@@ -144,13 +153,38 @@ namespace HotelApp.Migrations
                     b.ToTable("Room");
                 });
 
-            modelBuilder.Entity("HotelApp.Data.Invoice", b =>
+            modelBuilder.Entity("HotelApp.Data.Booking", b =>
                 {
-                    b.HasOne("HotelApp.Data.Guest", null)
-                        .WithMany("Invoices")
+                    b.HasOne("HotelApp.Data.Guest", "Guest")
+                        .WithMany()
                         .HasForeignKey("GuestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("HotelApp.Data.Room", "Room")
+                        .WithMany()
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guest");
+
+                    b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("HotelApp.Data.Invoice", b =>
+                {
+                    b.HasOne("HotelApp.Data.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HotelApp.Data.Guest", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("GuestId");
+
+                    b.Navigation("Booking");
                 });
 
             modelBuilder.Entity("HotelApp.Data.Guest", b =>

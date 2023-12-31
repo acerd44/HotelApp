@@ -25,7 +25,7 @@ namespace HotelApp.Core
                 Console.WriteLine("1. New booking");
                 Console.WriteLine("2. Pay invoice");
                 Console.WriteLine("3. Cancel booking");
-                Console.WriteLine("\n\n4. CRUD");
+                Console.WriteLine("\n\n4. Admin");
                 RequestEntryWithinRange("", ref option, 5);
                 switch (option)
                 {
@@ -36,7 +36,7 @@ namespace HotelApp.Core
                         InvoiceHandler.PayInvoice(db);
                         break;
                     case 3:
-                        BookingHandler.Delete(db, false);
+                        BookingHandler.Delete(db);
                         break;
                     case 4:
                         CRUDMenu(db);
@@ -54,7 +54,7 @@ namespace HotelApp.Core
             while (menu)
             {
                 Console.Clear();
-                Console.WriteLine("Hossen Hotel - CRUD\n");
+                Console.WriteLine("Hossen Hotel - Admin\n");
                 Console.WriteLine("0. Exit");
                 Console.WriteLine("1. Guests");
                 Console.WriteLine("2. Rooms");
@@ -93,7 +93,7 @@ namespace HotelApp.Core
             if (input == 0) return;
             else
             {
-                if (input == 1) BookingHandler.Create(db, null);
+                if (input == 1) BookingHandler.Create(db);
                 else if (input == 2)
                 {
                     int amountOfGuests = db.Guest.ToList().Count;

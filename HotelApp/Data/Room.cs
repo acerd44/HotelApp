@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HotelApp.Data
 {
-    public class Room : IHotel
+    public class Room
     {
         [Key]
         public int Id { get; set; }
