@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HotelApp.Data
 {
-    public class Guest : IHotel
+    public class Guest
     {
         [Key]
         public int Id { get; set; }

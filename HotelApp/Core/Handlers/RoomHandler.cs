@@ -1,6 +1,7 @@
 ﻿using Azure;
 using HotelApp.Core;
 using HotelApp.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,21 +21,15 @@ namespace HotelApp.Core.Handlers
             Console.WriteLine("0. Back");
             Console.WriteLine("\nSize to bed(+extra beds) conversion:\n 40: 2+2 - 30-39: 2+1 - 15-29: 1+0\n");
             Console.Write("Write the size of the room:(15-40) ");
-            while (!int.TryParse(Console.ReadLine(), out input) || (input >= 15 && input <= 40))
+            while (!int.TryParse(Console.ReadLine(), out input) || !(input >= 15 && input <= 40))
             {
                 if (input == 0) return;
                 Console.WriteLine($"Please enter a size between 15-40");
             }
             room.Size = input;
-            //Console.Write("Write the amount of beds in the room:(1-4) ");
-            //while (!int.TryParse(Console.ReadLine(), out input) || !(input >= 1 && input <= 4))
-            //{
-            //    if (input == 0) return;
-            //    Console.WriteLine($"Please enter a size between 1-4");
-            //}
-            SetBeds(ref input, ref room);
-            Console.WriteLine($"The room will have {room.Beds} beds.");
-            Console.Write("Write the price of the room: ");
+            SetBeds(ref input, ref room); // Adjust the beds and extra beds that can be in the room
+            Console.WriteLine($"The room will have {room.Beds} beds and can have {room.ExtraBeds} extra beds.");
+            Console.Write("Write the price(per day) of the room: ");
             while (!int.TryParse(Console.ReadLine(), out input) || input == 0)
             {
                 if (input == 0) return;
@@ -54,23 +49,37 @@ namespace HotelApp.Core.Handlers
             Console.WriteLine("0. Back");
             Console.WriteLine("ID - Size - Beds");
             allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2 - {r.Beds} - {r.Price}kr"));
-            Console.Write("Which room would you like to delete?");
+            Console.Write("Which room would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
             {
                 if (roomIndex == 0) return;
                 Console.WriteLine($"Please enter an option.");
             }
-            Room room = db.Room.First(cr => cr.Id == roomIndex);
-            Console.Write($"Are you sure you want to delete {room.Id}?(y/n) ");
+            Room selectedRoom = db.Room.First(cr => cr.Id == roomIndex);
+            var bookingsWithRoom = db.Booking.Include(b => b.Room).Where(b => b.Room == selectedRoom).ToList(); // Get a list of bookings of the room
+            if (bookingsWithRoom.Count > 0)
+            {
+                Console.WriteLine("\nBEWARE: There are bookings with this room, deleting the room will also HARD DELETE the bookings and invoices connected to the room\n");
+            }
+            Console.Write($"Are you sure you want to delete room {selectedRoom.Id}?(y/n) ");
             string? confirmInput = Console.ReadLine().ToLower();
-            while (!confirmInput.Equals("y") || !confirmInput.Equals("n"))
+            while (!(confirmInput.Equals("y") || confirmInput.Equals("n")))
             {
                 Console.WriteLine("Please enter Y/N");
                 confirmInput = Console.ReadLine().ToLower();
             }
             if (confirmInput.Equals("y"))
             {
-                db.Room.Remove(room);
+                if (bookingsWithRoom.Count > 0)
+                {
+                    bookingsWithRoom.ForEach(b =>
+                    {
+                        var invoice = db.Invoice.Include(i => i.Booking).First(i => i.Booking == b);
+                        db.Invoice.Remove(invoice);
+                        db.Booking.Remove(b);
+                    });
+                }
+                db.Room.Remove(selectedRoom);
                 db.SaveChanges();
             }
         }
@@ -90,13 +99,12 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine("Please enter an option");
             }
             if (roomIndex == 0) return;
-            Room room = db.Room.First(cr => cr.Id == roomIndex);
+            Room selectedRoom = db.Room.First(cr => cr.Id == roomIndex);
             Console.Clear();
-            Console.WriteLine($"Hossen Hotel - Editting Room {room.Id}\n ");
+            Console.WriteLine($"Hossen Hotel - Editting Room {selectedRoom.Id}\n ");
             Console.WriteLine("0. Back");
             Console.WriteLine("1. Size (affects amount of beds)");
-            //Console.WriteLine("2. Beds");
-            Console.WriteLine("2. Price");
+            Console.WriteLine("2. Price per day");
             Console.Write("Which part would you like to edit?");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !Enumerable.Range(0, 3).Contains(roomIndex))
             {
@@ -104,37 +112,28 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine("Please enter an option (0-2)");
             }
             Console.Clear();
-            Console.WriteLine($"Hossen Hotel - Editting Room {room.Id} \n ");
+            Console.WriteLine($"Hossen Hotel - Editting Room {selectedRoom.Id} \n ");
             switch (roomIndex)
             {
                 case 1:
                     Console.WriteLine("Size to bed(+extra beds) conversion:\n 40: 2+2 - 30-39: 2+1 - 15-29: 1+0\n");
                     Console.Write("What would you like to change the size to?(15-40) ");
-                    while (!int.TryParse(Console.ReadLine(), out input) || (input >= 15 && input <= 40))
+                    while (!int.TryParse(Console.ReadLine(), out input) || !(input >= 15 && input <= 40))
                     {
                         if (input == 0) return;
                         Console.WriteLine("Please follow the instructions.");
                     }
-                    room.Size = input;
-                    SetBeds(ref input, ref room);
+                    selectedRoom.Size = input;
+                    SetBeds(ref input, ref selectedRoom);
                     break;
                 case 2:
-                    //    Console.Write("What would you like to change the amount of beds to? ");
-                    //    while (!int.TryParse(Console.ReadLine(), out input) || input <= 0)
-                    //    {
-                    //        if (input == 0) return;
-                    //        Console.WriteLine("Please enter a value above 0kr");
-                    //    }
-                    //    room.Beds = input;
-                    //    break;
-                    //case 3:
                     Console.Write("What would you like to change the price to? ");
                     while (!int.TryParse(Console.ReadLine(), out input) || input <= 0)
                     {
                         if (input == 0) return;
                         Console.WriteLine("Please enter a value above 0kr");
                     }
-                    room.Price = input;
+                    selectedRoom.Price = input;
                     break;
             }
             db.SaveChanges();
@@ -145,8 +144,8 @@ namespace HotelApp.Core.Handlers
             if (allRooms.Count == 0) return;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all rooms\n ");
-            Console.WriteLine("Id - Size - Beds - Extra Beds - Price");
-            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2 - {r.Beds} - {r.ExtraBeds} - {r.Price}kr"));
+            Console.WriteLine("Id - Size - Beds+Extra Beds - Price per day");
+            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2 - {r.Beds}+{r.ExtraBeds} - {r.Price}kr"));
             Console.WriteLine("\nPress any button to continue.");
             Console.ReadKey();
         }
@@ -162,16 +161,24 @@ namespace HotelApp.Core.Handlers
                 room.Beds = 2;
                 room.ExtraBeds = 1;
             }
-            else if (size >= 25 && size < 30) room.Beds = 2;
-            else room.Beds = 1;
+            else if (size < 30) room.Beds = 1;
         }
-        public static List<Room> GetRecommendedRooms(HotelContext db, DateTime startDate, DateTime endDate, int guests)
+        /// <summary>
+        /// Gets the available rooms based on the amount of guests and the two dates. for example if there are 3 guests, it'll give you rooms that can take at least 3 guests
+        /// and are available between <paramref name="startDate"/> and <paramref name="endDate"/>
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <param name="guests"></param>
+        /// <returns>a List of Room</returns>
+        public static List<Room> GetAvailableRooms(HotelContext db, DateTime startDate, DateTime endDate, int guests)
         {
             var recommendedRooms = new List<Room>();
-            var rooms = db.Room.ToList();
+            var allRooms = db.Room.ToList();
             if (guests == 1)
             {
-                rooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate) && r.Beds == 1)
+                allRooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate))
                     .ToList()
                     .ForEach(recommendedRooms.Add);
             }
@@ -179,18 +186,23 @@ namespace HotelApp.Core.Handlers
             {
                 if (guests == 4)
                 {
-                    rooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate) && r.ExtraBeds == 2)
+                    allRooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate) && r.ExtraBeds == 2)
                         .ToList()
                         .ForEach(recommendedRooms.Add);
                 }
                 else
                 {
-                    rooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate) && r.ExtraBeds >= 1)
+                    allRooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate) && r.ExtraBeds >= 1)
                         .ToList()
                         .ForEach(recommendedRooms.Add);
                 }
             }
             return recommendedRooms;
+        }
+        public static List<Room> GetAvailableRooms(HotelContext db, DateTime startDate, DateTime endDate)
+        {
+            var rooms = db.Room.ToList();
+            return rooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate)).ToList();
         }
         /// <summary>
         /// Checks if the room related to the <paramref name="roomId"/> is available between <paramref name="startDate"/> and <paramref name="endDate"/>
@@ -219,10 +231,6 @@ namespace HotelApp.Core.Handlers
                 || (endDate >= b.StartDate && endDate <= b.EndDate)
                 || (startDate <= b.StartDate && endDate >= b.EndDate));
         }
-        public static List<Room> GetAvailableRooms(HotelContext db, DateTime startDate, DateTime endDate)
-        {
-            var rooms = db.Room.ToList();
-            return rooms.Where(r => CheckSpecificRoomAvailability(db, r.Id, startDate, endDate)).ToList();
-        }
+
     }
 }

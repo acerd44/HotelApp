@@ -22,17 +22,17 @@ namespace HotelApp.Core.Handlers
         }
         public static void Delete(HotelContext db)
         {
-            var allInvoices = db.Invoice.ToList();
+            var allInvoices = db.Invoice.Include(i => i.Booking).ThenInclude(b => b.Guest).ToList();
             if (allInvoices.Count == 0) return;
             int invoiceIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a invoice\n ");
             Console.WriteLine("0. Back");
-            Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Price - Paid off");
+            Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Price - Archived");
             allInvoices.ForEach(i =>
             {
-                var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "N/A";
-                Console.WriteLine($"{i.Id}. {i.GuestId} - {paidDate} - {i.DueDate} - {i.TotalSum}");
+                var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "Not Paid";
+                Console.WriteLine($"{i.Id}. {i.Booking.Guest.Name} - {paidDate} - {i.DueDate} - {i.TotalSum} - {i.IsArchived}");
             });
             Console.Write("Which invoice would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out invoiceIndex) || !allInvoices.Any(i => i.Id == invoiceIndex))
@@ -40,21 +40,28 @@ namespace HotelApp.Core.Handlers
                 if (invoiceIndex == 0) return;
                 Console.WriteLine("Please enter an option");
             }
-            Invoice invoice = db.Invoice.First(cr => cr.Id == invoiceIndex);
-            Console.Write($"Are you sure to delete this invoice {invoice.Id}?(y/n) "); ;
+            Invoice invoice = allInvoices.First(i => i.Id == invoiceIndex);
+            Booking booking = invoice.Booking;
+            Console.Write($"Are you sure to delete invoice {invoice.Id}?(y/n/h hard delete) "); ;
             string? confirmInput = Console.ReadLine().ToLower();
-            while (!confirmInput.Equals("y") || !confirmInput.Equals("n"))
+            while (!(confirmInput.Equals("y") || confirmInput.Equals("n") || confirmInput.Equals("h")))
             {
-                Console.WriteLine("Please enter Y/N");
+                Console.WriteLine("Please enter Y/N/H");
                 confirmInput = Console.ReadLine().ToLower();
             }
             if (confirmInput.Equals("y"))
             {
-                db.Invoice.Remove(invoice);
-                db.SaveChanges();
+                invoice.IsArchived = true;
+                booking.IsArchived = true;
+                booking.IsActive = false;
             }
+            else if (confirmInput.Equals("h"))
+            {
+                db.Invoice.Remove(invoice);
+                db.Booking.Remove(booking);
+            }
+            db.SaveChanges();
         }
-
         public static void ShowAll(HotelContext db)
         {
             var guestsWithInvoices = db.Guest.Include(g => g.Invoices).Where(g => g.Invoices.Count != 0).ToList();
@@ -77,24 +84,24 @@ namespace HotelApp.Core.Handlers
             switch (input)
             {
                 case 1:
-                    Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Sum - Paid off");
+                    Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Sum - Paid off - Archived");
                     foreach (var g in guestsWithInvoices)
                     {
                         foreach (var i in g.Invoices)
                         {
                             var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "N/A";
-                            Console.WriteLine($"{i.Id}. {g.Name} - {paidDate} - {i.DueDate.ToShortDateString()} - {i.TotalSum} - {i.IsPaid}");
+                            Console.WriteLine($"{i.Id}. {g.Name} - {paidDate} - {i.DueDate.ToShortDateString()} - {i.TotalSum} - {i.IsPaid} - {i.IsArchived}");
                         }
                     }
                     break;
                 case 2:
-                    Console.WriteLine("ID - Guest - Due Date - Total Sum");
+                    Console.WriteLine("ID - Guest - Paid Date - Total Sum");
                     foreach (var g in guestsWithInvoices)
                     {
                         if (!g.Invoices.Any(i => i.IsPaid)) continue;
                         foreach (var i in g.Invoices.Where(i => i.IsPaid))
                         {
-                            Console.WriteLine($"{i.Id}. {g.Name} - {i.DueDate.ToShortDateString()} - {i.TotalSum}");
+                            Console.WriteLine($"{i.Id}. {g.Name} - {i.PaidDate.ToShortDateString()} - {i.TotalSum}");
                         }
                     }
                     break;
@@ -122,6 +129,7 @@ namespace HotelApp.Core.Handlers
                     }
                     break;
             }
+            Console.WriteLine("\nPress any button to continue.");
             Console.ReadKey();
         }
         public static void PayInvoice(HotelContext db)
@@ -139,26 +147,25 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine($"{i.Id}. {i.Name}");
             }
             Console.Write("Which guest is paying their invoice? ");
-            while (!int.TryParse(Console.ReadLine(), out input) || !guestsWithInvoices.Any(g => g.Id == input))
+            while (!int.TryParse(Console.ReadLine(), out input) || !guestsWithInvoices.Any(i => i.Id == input))
             {
                 if (input == 0) return;
                 Console.WriteLine("Please enter the correct option.");
             }
-            Guest guest = db.Guest.First(g => g.Id == input);
-            foreach (var i in db.Invoice.Where(i => i.GuestId == guest.Id).ToList())
+            Guest guest = guestsWithInvoices.First(g => g.Id == input);
+            foreach (var i in guest.Invoices)
             {
-                var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "N/A";
                 Console.WriteLine($"Id: {i.Id} - Due: {i.DueDate.ToShortDateString()} - Sum: {i.TotalSum}");
             }
             Console.Write("Which invoice would you like to pay off? ");
             while (!int.TryParse(Console.ReadLine(), out input)
-                || !db.Invoice.Any(i => i.Id == input && i.GuestId == guest.Id))
+                || !guest.Invoices.Any(i => i.Id == input))
             {
                 if (input == 0) return;
                 Console.WriteLine("Please enter the correct option.");
             }
-            Invoice invoice = db.Invoice.First(i => i.Id == input);
-            Console.WriteLine("The invoice has been paid off.");
+            Invoice invoice = guest.Invoices.First(i => i.Id == input);
+            Console.WriteLine("The invoice has been paid off, press any button to continue.");
             invoice.IsPaid = true;
             invoice.IsArchived = true;
             invoice.PaidDate = DateTime.Today;

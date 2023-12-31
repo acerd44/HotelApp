@@ -17,7 +17,6 @@ namespace HotelApp
     public class App
     {
         private DbContextOptionsBuilder<HotelContext> options;
-
         public App()
         {
             var builder = new ConfigurationBuilder().AddJsonFile($"appsettings.json", true, true);
@@ -67,7 +66,6 @@ namespace HotelApp
         {
             Menu.MainMenu(new HotelContext(options.Options));
         }
-
         private void SeedData(HotelContext db)
         {
             if (!db.Guest.Any())

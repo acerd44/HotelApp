@@ -31,29 +31,27 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine("Please follow the instructions.");
                 input = Console.ReadLine();
             }
-            // Removes white space and makes sure spaces between words aren't being removed. Also capitalizes first letter of the word(s)
+            // Removes white space and makes sure spaces between words aren't being removed. Also capitalizes first letters of the name
             guest.Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.Trim().ToLower());
-            Console.Write("Enter the address of the guest:(optional, enter a - if you do not wish to provide an address) ");
+            Console.Write("Enter the address of the guest:(optional, leave it empty if you do not wish to provide an address) ");
             input = Console.ReadLine();
-            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input.Equals("0"))
-            {
-                if (input.Equals("0")) return;
-                Console.WriteLine("Please follow the instructions.");
-                input = Console.ReadLine();
-            }
+            if (input.Equals("0")) return;
             guest.Address = input;
             Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
-            while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$"))
+            while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$")
+                || db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
             {
                 if (numberInput == 0) return;
-                Console.WriteLine("Please follow the instructions. ");
+                if (db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
+                    Console.WriteLine("That phone number is already in use, try another one.");
+                else
+                    Console.WriteLine("Please follow the instructions. ");
             }
             guest.PhoneNumber = numberInput.ToString();
             guest.IsActive = true;
             db.Guest.Add(guest);
             db.SaveChanges();
         }
-
         public static void Delete(HotelContext db)
         {
             var allGuests = db.Guest.ToList();
@@ -70,9 +68,9 @@ namespace HotelApp.Core.Handlers
                 if (guestIndex == 0) return;
                 Console.WriteLine($"Please enter an option");
             }
-            Guest guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
+            Guest selectedGuest = allGuests.First(g => g.Id == guestIndex);
             Console.WriteLine("\nKeep in mind this will delete bookings/invoices related to the guest.\n");
-            Console.Write($"Are you sure you want to delete {guest.Name} as a guest?(y/n/h for hard delete) ");
+            Console.Write($"Are you sure you want to delete {selectedGuest.Name} as a guest?(y/n/h for hard delete) ");
             string? confirmInput = Console.ReadLine().ToLower();
             while (string.IsNullOrWhiteSpace(confirmInput) || string.IsNullOrEmpty(confirmInput)
                 || !(confirmInput.Equals("y") || confirmInput.Equals("n") || confirmInput.Equals("h")))
@@ -80,8 +78,8 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine("Please follow the instructions.");
                 confirmInput = Console.ReadLine();
             }
-            var guestBookings = db.Booking.Where(b => b.Id == guest.Id).ToList();
-            var guestInvoices = db.Invoice.Where(i => i.Id == guest.Id).ToList();
+            var guestBookings = db.Booking.Where(b => b.Id == selectedGuest.Id).ToList();
+            var guestInvoices = db.Invoice.Where(i => i.Id == selectedGuest.Id).ToList();
             if (confirmInput.Equals("y"))
             {
                 guestBookings.ForEach(b =>
@@ -90,17 +88,16 @@ namespace HotelApp.Core.Handlers
                     b.IsArchived = true;
                 });
                 guestInvoices.ForEach(i => i.IsArchived = true);
-                guest.IsActive = false;
+                selectedGuest.IsActive = false;
             }
             if (confirmInput.Equals("h"))
             {
                 guestInvoices.ForEach(i => db.Invoice.Remove(i));
                 guestBookings.ForEach(b => db.Booking.Remove(b));
-                db.Guest.Remove(guest);
+                db.Guest.Remove(selectedGuest);
             }
             db.SaveChanges();
         }
-
         public static void Update(HotelContext db)
         {
             var allGuests = db.Guest.ToList();
@@ -117,7 +114,7 @@ namespace HotelApp.Core.Handlers
                 if (guestIndex == 0) return;
                 Console.WriteLine($"Please enter an option");
             }
-            Guest guest = db.Guest.First(cr => cr.Id == allGuests[guestIndex - 1].Id);
+            Guest guest = allGuests.First(cr => cr.Id == guestIndex);
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting {guest.Name}r\n ");
             Console.WriteLine("0. Back");
@@ -142,20 +139,19 @@ namespace HotelApp.Core.Handlers
             {
                 case 1:
                     Console.Write("What would you like to change their name to? ");
+                    input = Console.ReadLine();
                     while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input.Any(char.IsDigit))
                     {
                         if (input.Equals("0")) return;
                         Console.WriteLine("Please enter a name without numbers.");
+                        input = Console.ReadLine();
                     }
                     guest.Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.Trim().ToLower());
                     break;
                 case 2:
-                    Console.Write("What would you like to change their address to? ");
-                    while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input.Equals("0"))
-                    {
-                        if (input.Equals("0")) return;
-                        Console.WriteLine("Please enter an address.");
-                    }
+                    Console.Write("What would you like to change their address to?(Leave empty if you wish) ");
+                    input = Console.ReadLine();
+                    if (input.Equals("0")) return;
                     guest.Address = input;
                     break;
                 case 3:
@@ -185,7 +181,6 @@ namespace HotelApp.Core.Handlers
             }
             db.SaveChanges();
         }
-
         public static void ShowAll(HotelContext db)
         {
             var allGuests = db.Guest.ToList();
@@ -222,6 +217,7 @@ namespace HotelApp.Core.Handlers
                 case 0:
                     return;
             }
+            Console.WriteLine("Press any button to continue.");
             Console.ReadKey();
         }
     }
