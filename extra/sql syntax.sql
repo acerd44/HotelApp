@@ -61,3 +61,13 @@ WHERE
 
 INSERT INTO Guest
 VALUES ('Richard Chalk', '-', 321321123, 1)
+
+SELECT Name
+FROM Guest
+WHERE Id IN (
+    SELECT b.GuestId
+    FROM Booking b
+    INNER JOIN Invoice i ON b.Id = i.BookingId
+    GROUP BY b.GuestId
+    HAVING SUM(i.TotalSum) > 100
+);
