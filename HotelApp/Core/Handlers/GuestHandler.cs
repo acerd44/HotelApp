@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.Core;
+using ConsoleTables;
 using HotelApp.Core;
 using HotelApp.Data;
 using System;
@@ -60,8 +61,10 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a guest\n ");
             Console.WriteLine("0. Back");
-            Console.WriteLine("ID - Name");
-            allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}"));
+            var table = new ConsoleTable("Id", "Name", "Active");
+            table.Options.EnableCount = false;
+            allGuests.ForEach(g => table.AddRow(g.Id, g.Name, g.IsActive.ToString().ToLower()));
+            table.Write();
             Console.Write("Which guest would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
             {
@@ -107,7 +110,10 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new guest\n ");
             Console.WriteLine("0. Back");
-            allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name} - active: {g.IsActive.ToString().ToLower()}"));
+            var table = new ConsoleTable("Id", "Name", "Active");
+            table.Options.EnableCount = false;
+            allGuests.ForEach(g => table.AddRow(g.Id, g.Name, g.IsActive.ToString().ToLower()));
+            table.Write();
             Console.Write("Which guest would you like to edit? ");
             while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
             {
@@ -158,10 +164,14 @@ namespace HotelApp.Core.Handlers
                     Console.Write("What would you like to change their phone number to?(between 6 and 12 digits) ");
                     int numberInput;
                     Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
-                    while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$"))
+                    while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$")
+                        || db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
                     {
                         if (numberInput == 0) return;
-                        Console.WriteLine("Please follow the instructions.");
+                        if (db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
+                            Console.WriteLine("That phone number is already in use, try another one.");
+                        else
+                            Console.WriteLine("Please follow the instructions. ");
                     }
                     guest.PhoneNumber = numberInput.ToString();
                     break;
@@ -198,25 +208,25 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine("Please enter an option (0-3)");
             }
             Console.Clear();
-            Console.WriteLine("\nId - Name");
+            var table = new ConsoleTable();
             switch (input)
             {
                 case 1:
-                    allGuests.ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber} - active: {g.IsActive.ToString().ToLower()}"));
+                    table = new ConsoleTable("Id", "Name", "Address", "Phone Number", "Active");
+                    allGuests.ForEach(g => table.AddRow(g.Id, g.Name, g.Address, g.PhoneNumber, g.IsActive.ToString().ToLower()));
                     break;
                 case 2:
-                    allGuests.Where(g => g.IsActive)
-                        .ToList()
-                        .ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
+                    table = new ConsoleTable("Id", "Name", "Address", "Phone Number");
+                    allGuests.Where(g => g.IsActive).ToList().ForEach(g => table.AddRow(g.Id, g.Name, g.Address, g.PhoneNumber));
                     break;
                 case 3:
-                    allGuests.Where(g => !g.IsActive)
-                        .ToList()
-                        .ForEach(g => Console.WriteLine($"{g.Id}. {g.Name}, {g.Address}, {g.PhoneNumber}"));
+                    table = new ConsoleTable("Id", "Name", "Address", "Phone Number");
+                    allGuests.Where(g => !g.IsActive).ToList().ForEach(g => table.AddRow(g.Id, g.Name, g.Address, g.PhoneNumber));
                     break;
                 case 0:
                     return;
             }
+            table.Write();
             Console.WriteLine("Press any button to continue.");
             Console.ReadKey();
         }

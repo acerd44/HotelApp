@@ -1,4 +1,5 @@
-﻿using HotelApp.Core;
+﻿using ConsoleTables;
+using HotelApp.Core;
 using HotelApp.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -28,12 +29,14 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a invoice\n ");
             Console.WriteLine("0. Back");
-            Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Price - Archived");
+            var table = new ConsoleTable("Id", "Guest", "Paid Date", "Due Date", "Total Sum", "Archived");
+            table.Options.EnableCount = false;
             allInvoices.ForEach(i =>
             {
                 var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "Not Paid";
-                Console.WriteLine($"{i.Id}. {i.Booking.Guest.Name} - {paidDate} - {i.DueDate} - {i.TotalSum} - {i.IsArchived}");
+                table.AddRow(i.Id, i.Booking.Guest.Name, paidDate, i.DueDate.ToShortDateString(), i.TotalSum, i.IsArchived);
             });
+            table.Write();
             Console.Write("Which invoice would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out invoiceIndex) || !allInvoices.Any(i => i.Id == invoiceIndex))
             {
@@ -81,54 +84,56 @@ namespace HotelApp.Core.Handlers
             }
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all invoices\n ");
+            var table = new ConsoleTable();
             switch (input)
             {
                 case 1:
-                    Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Sum - Paid off - Archived");
+                    table = new ConsoleTable("Id", "Guest", "Paid Date", "Due Date", "Total Sum", "Paid Off", "Archived");
                     foreach (var g in guestsWithInvoices)
                     {
                         foreach (var i in g.Invoices)
                         {
                             var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "N/A";
-                            Console.WriteLine($"{i.Id}. {g.Name} - {paidDate} - {i.DueDate.ToShortDateString()} - {i.TotalSum} - {i.IsPaid} - {i.IsArchived}");
+                            table.AddRow(i.Id, g.Name, paidDate, i.DueDate.ToShortDateString(), i.TotalSum, i.IsPaid, i.IsArchived);
                         }
                     }
                     break;
                 case 2:
-                    Console.WriteLine("ID - Guest - Paid Date - Total Sum");
+                    table = new ConsoleTable("Id", "Guest", "Paid Date", "Total Sum");
                     foreach (var g in guestsWithInvoices)
                     {
                         if (!g.Invoices.Any(i => i.IsPaid)) continue;
                         foreach (var i in g.Invoices.Where(i => i.IsPaid))
                         {
-                            Console.WriteLine($"{i.Id}. {g.Name} - {i.PaidDate.ToShortDateString()} - {i.TotalSum}");
+                            table.AddRow(i.Id, g.Name, i.PaidDate.ToShortDateString(), i.TotalSum);
                         }
                     }
                     break;
                 case 3:
-                    Console.WriteLine("ID - Guest - Due Date - Total Sum");
+                    table = new ConsoleTable("Id", "Guest", "Due Date", "Total Sum");
                     foreach (var g in guestsWithInvoices)
                     {
                         if (g.Invoices.Any(i => i.IsPaid)) continue;
                         foreach (var i in g.Invoices.Where(i => !i.IsPaid))
                         {
-                            Console.WriteLine($"{i.Id}. {g.Name} - {i.DueDate.ToShortDateString()} - {i.TotalSum}");
+                            table.AddRow(i.Id, g.Name, i.DueDate.ToShortDateString(), i.TotalSum);
                         }
                     }
                     break;
                 case 4:
-                    Console.WriteLine("ID - Guest - Paid Date - Due Date - Total Sum - Paid off");
+                    table = new ConsoleTable("Id", "Guest", "Paid Date", "Due Date", "Total Sum", "Paid Off");
                     foreach (var g in guestsWithInvoices)
                     {
                         if (!g.Invoices.Any(i => i.IsArchived)) continue;
                         foreach (var i in g.Invoices.Where(i => i.IsArchived))
                         {
                             var paidDate = i.IsPaid ? i.PaidDate.ToShortDateString() : "N/A";
-                            Console.WriteLine($"{i.Id}. {g.Name} - {paidDate} - {i.DueDate.ToShortDateString()} - {i.TotalSum} - {i.IsPaid}");
+                            table.AddRow(i.Id, g.Name, paidDate, i.DueDate.ToShortDateString(), i.TotalSum, i.IsPaid);
                         }
                     }
                     break;
             }
+            table.Write();
             Console.WriteLine("\nPress any button to continue.");
             Console.ReadKey();
         }
@@ -142,10 +147,13 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Paying off an invoice\n");
             int input;
-            foreach (var i in guestsWithInvoices)
+            var table = new ConsoleTable("Id", "Name");
+            table.Options.EnableCount = false;
+            foreach (var g in guestsWithInvoices)
             {
-                Console.WriteLine($"{i.Id}. {i.Name}");
+                table.AddRow(g.Id, g.Name);
             }
+            table.Write();
             Console.Write("Which guest is paying their invoice? ");
             while (!int.TryParse(Console.ReadLine(), out input) || !guestsWithInvoices.Any(i => i.Id == input))
             {
@@ -153,10 +161,13 @@ namespace HotelApp.Core.Handlers
                 Console.WriteLine("Please enter the correct option.");
             }
             Guest guest = guestsWithInvoices.First(g => g.Id == input);
+            table = new ConsoleTable("Id", "Due Date", "Total Sum");
+            table.Options.EnableCount = false;
             foreach (var i in guest.Invoices)
             {
-                Console.WriteLine($"Id: {i.Id} - Due: {i.DueDate.ToShortDateString()} - Sum: {i.TotalSum}");
+                table.AddRow(i.Id, i.DueDate.ToShortDateString(), i.TotalSum);
             }
+            table.Write();
             Console.Write("Which invoice would you like to pay off? ");
             while (!int.TryParse(Console.ReadLine(), out input)
                 || !guest.Invoices.Any(i => i.Id == input))

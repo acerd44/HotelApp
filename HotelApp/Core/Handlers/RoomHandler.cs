@@ -1,4 +1,5 @@
 ﻿using Azure;
+using ConsoleTables;
 using HotelApp.Core;
 using HotelApp.Data;
 using Microsoft.EntityFrameworkCore;
@@ -47,8 +48,10 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a room\n ");
             Console.WriteLine("0. Back");
-            Console.WriteLine("ID - Size - Beds");
-            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2 - {r.Beds} - {r.Price}kr"));
+            var table = new ConsoleTable("Id", "Size", "Beds+Extra Beds", "Price per day");
+            table.Options.EnableCount = false;
+            allRooms.ForEach(r => table.AddRow(r.Id, r.Size + "m^2", r.Beds + "+" + r.ExtraBeds, r.Price + "kr"));
+            table.Write();
             Console.Write("Which room would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
             {
@@ -91,7 +94,10 @@ namespace HotelApp.Core.Handlers
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a room\n ");
             Console.WriteLine("0. Back");
-            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2 - {r.Beds} - {r.ExtraBeds} - {r.Price}kr"));
+            var table = new ConsoleTable("Id", "Size", "Beds+Extra Beds", "Price per day");
+            table.Options.EnableCount = false;
+            allRooms.ForEach(r => table.AddRow(r.Id, r.Size + "m^2", r.Beds + "+" + r.ExtraBeds, r.Price + "kr"));
+            table.Write();
             Console.Write("Which room would you like to edit?");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
             {
@@ -144,11 +150,17 @@ namespace HotelApp.Core.Handlers
             if (allRooms.Count == 0) return;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all rooms\n ");
-            Console.WriteLine("Id - Size - Beds+Extra Beds - Price per day");
-            allRooms.ForEach(r => Console.WriteLine($"{r.Id}. {r.Size}m^2 - {r.Beds}+{r.ExtraBeds} - {r.Price}kr"));
+            var table = new ConsoleTable("Id", "Size", "Beds+Extra Beds", "Price per day");
+            allRooms.ForEach(r => table.AddRow(r.Id, r.Size + "m^2", r.Beds + "+" + r.ExtraBeds, r.Price + "kr"));
+            table.Write();
             Console.WriteLine("\nPress any button to continue.");
             Console.ReadKey();
         }
+        /// <summary>
+        /// Adjusts the amount of beds of a <paramref name="room"/> based on its <paramref name="size"/>
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="room"></param>
         private static void SetBeds(ref int size, ref Room room)
         {
             if (size == 40)
