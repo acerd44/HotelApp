@@ -215,23 +215,17 @@ namespace HotelApp.Core
                 Console.Clear();
                 Console.WriteLine("Hossen Hotel - Invoices\n");
                 Console.WriteLine("0. Exit");
-                Console.WriteLine("1. Add an invoice");
-                Console.WriteLine("2. Delete an invoice");
-                Console.WriteLine("3. Edit an invoice");
-                Console.WriteLine("4. Show all invoices");
-                RequestEntryWithinRange("", ref option, 4);
+                //Console.WriteLine("1. Add an invoice, does nothing");
+                Console.WriteLine("1. Delete an invoice");
+                //Console.WriteLine("3. Edit an invoice, does nothing");
+                Console.WriteLine("2. Show all invoices");
+                RequestEntryWithinRange("", ref option, 2);
                 switch (option)
                 {
                     case 1:
-                        InvoiceHandler.Create(db);
-                        break;
-                    case 2:
                         InvoiceHandler.Delete(db);
                         break;
-                    case 3:
-                        InvoiceHandler.Update(db);
-                        break;
-                    case 4:
+                    case 2:
                         InvoiceHandler.ShowAll(db);
                         break;
                     case 0:
@@ -240,6 +234,12 @@ namespace HotelApp.Core
                 }
             }
         }
+        /// <summary>
+        /// Writes out <paramref name="request"/> and asks for an <paramref name="input"/> between 0 and <paramref name="range"/>
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="input"></param>
+        /// <param name="range"></param>
         public static void RequestEntryWithinRange(string request, ref int input, int range)
         {
             Console.Write(request);

@@ -24,10 +24,6 @@ namespace HotelApp.Core.Handlers
         {
             Create(db, null);
         }
-        public static void Delete(HotelContext db)
-        {
-            Delete(db, true);
-        }
         public static void Create(HotelContext db, Guest? existingGuest)
         {
             var allGuests = db.Guest.ToList();
@@ -190,11 +186,10 @@ namespace HotelApp.Core.Handlers
             guest.IsActive = true;
             db.SaveChanges();
         }
-        public static void Delete(HotelContext db, bool showAll)
+        public static void Delete(HotelContext db)
         {
             List<Booking> allBookings = new();
-            if (showAll) allBookings = db.Booking.Include(b => b.Guest).ToList();
-            else allBookings = db.Booking.Include(b => b.Guest).Where(b => !b.IsArchived).ToList();
+            allBookings = db.Booking.Include(b => b.Guest).ToList();
             if (allBookings.Count == 0) return;
             int bookingIndex;
             Console.Clear();
