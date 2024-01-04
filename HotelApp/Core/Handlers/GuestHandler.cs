@@ -22,13 +22,13 @@ namespace HotelApp.Core.Handlers
             var guest = new Guest();
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new guest\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             Console.Write("Enter the name of the guest: ");
             string? input = Console.ReadLine();
             int numberInput;
-            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input.Equals("0"))
+            while (string.IsNullOrWhiteSpace(input) || string.IsNullOrEmpty(input) || input.Equals("-1"))
             {
-                if (input.Equals("0")) return;
+                if (input.Equals("-1")) return;
                 Console.WriteLine("Please follow the instructions.");
                 input = Console.ReadLine();
             }
@@ -36,13 +36,13 @@ namespace HotelApp.Core.Handlers
             guest.Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.Trim().ToLower());
             Console.Write("Enter the address of the guest:(optional, leave it empty if you do not wish to provide an address) ");
             input = Console.ReadLine();
-            if (input.Equals("0")) return;
+            if (input.Equals("-1")) return;
             guest.Address = input;
             Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
-            while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$")
+            while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == -1 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$")
                 || db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
             {
-                if (numberInput == 0) return;
+                if (numberInput == -1) return;
                 if (db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
                     Console.WriteLine("That phone number is already in use, try another one.");
                 else
@@ -60,7 +60,7 @@ namespace HotelApp.Core.Handlers
             int guestIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a guest\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Name", "Active");
             table.Options.EnableCount = false;
             allGuests.ForEach(g => table.AddRow(g.Id, g.Name, g.IsActive.ToString().ToLower()));
@@ -68,7 +68,7 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which guest would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
             {
-                if (guestIndex == 0) return;
+                if (guestIndex == -1) return;
                 Console.WriteLine($"Please enter an option");
             }
             Guest selectedGuest = allGuests.First(g => g.Id == guestIndex);
@@ -109,7 +109,7 @@ namespace HotelApp.Core.Handlers
             int guestIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a new guest\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Name", "Active");
             table.Options.EnableCount = false;
             allGuests.ForEach(g => table.AddRow(g.Id, g.Name, g.IsActive.ToString().ToLower()));
@@ -117,13 +117,13 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which guest would you like to edit? ");
             while (!int.TryParse(Console.ReadLine(), out guestIndex) || !allGuests.Any(g => g.Id == guestIndex))
             {
-                if (guestIndex == 0) return;
+                if (guestIndex == -1) return;
                 Console.WriteLine($"Please enter an option");
             }
             Guest guest = allGuests.First(cr => cr.Id == guestIndex);
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting {guest.Name}r\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             Console.WriteLine("1. Name");
             Console.WriteLine("2. Address");
             Console.WriteLine("3. Phone number");
@@ -134,10 +134,10 @@ namespace HotelApp.Core.Handlers
                 range = 4;
             }
             Console.Write("Which part would you like to edit? ");
-            while (!int.TryParse(Console.ReadLine(), out guestIndex) || !Enumerable.Range(0, range + 1).Contains(guestIndex))
+            while (!int.TryParse(Console.ReadLine(), out guestIndex) || !Enumerable.Range(1, range).Contains(guestIndex))
             {
-                if (guestIndex == 0) return;
-                Console.WriteLine($"Please enter an option (0-{range})");
+                if (guestIndex == -1) return;
+                Console.WriteLine($"Please enter an option");
             }
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting {guest.Name}\n ");
@@ -148,7 +148,7 @@ namespace HotelApp.Core.Handlers
                     input = Console.ReadLine();
                     while (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input) || input.Any(char.IsDigit))
                     {
-                        if (input.Equals("0")) return;
+                        if (input.Equals("-1")) return;
                         Console.WriteLine("Please enter a name without numbers.");
                         input = Console.ReadLine();
                     }
@@ -157,17 +157,17 @@ namespace HotelApp.Core.Handlers
                 case 2:
                     Console.Write("What would you like to change their address to?(Leave empty if you wish) ");
                     input = Console.ReadLine();
-                    if (input.Equals("0")) return;
+                    if (input.Equals("-1")) return;
                     guest.Address = input;
                     break;
                 case 3:
                     Console.Write("What would you like to change their phone number to?(between 6 and 12 digits) ");
                     int numberInput;
                     Console.Write("Enter the phone number of the guest (between 6 and 12 digits): ");
-                    while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == 0 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$")
+                    while (!int.TryParse(Console.ReadLine(), out numberInput) || numberInput == -1 || !Regex.IsMatch(numberInput.ToString(), @"^\d{6,12}$")
                         || db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
                     {
-                        if (numberInput == 0) return;
+                        if (numberInput == -1) return;
                         if (db.Guest.Select(g => g.PhoneNumber).ToList().Contains(numberInput.ToString()))
                             Console.WriteLine("That phone number is already in use, try another one.");
                         else
@@ -198,14 +198,14 @@ namespace HotelApp.Core.Handlers
             int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all guests\n ");
-            Console.WriteLine("0. Exit");
+            Console.WriteLine("-1. Exit");
             Console.WriteLine("1. Show all guests");
             Console.WriteLine("2. Only show active guests");
             Console.WriteLine("3. Only show inactive guests");
-            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 4).Contains(input))
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(1, 3).Contains(input))
             {
-                if (input == 0) return;
-                Console.WriteLine("Please enter an option (0-3)");
+                if (input == -1) return;
+                Console.WriteLine("Please enter an option");
             }
             Console.Clear();
             var table = new ConsoleTable();
@@ -223,8 +223,6 @@ namespace HotelApp.Core.Handlers
                     table = new ConsoleTable("Id", "Name", "Address", "Phone Number");
                     allGuests.Where(g => !g.IsActive).ToList().ForEach(g => table.AddRow(g.Id, g.Name, g.Address, g.PhoneNumber));
                     break;
-                case 0:
-                    return;
             }
             table.Write();
             Console.WriteLine("Press any button to continue.");

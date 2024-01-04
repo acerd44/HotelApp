@@ -17,6 +17,7 @@ namespace HotelApp
     public class App
     {
         private DbContextOptionsBuilder<HotelContext> options;
+        private HotelContext db;
         public App()
         {
             var builder = new ConfigurationBuilder().AddJsonFile($"appsettings.json", true, true);
@@ -24,47 +25,45 @@ namespace HotelApp
             var connectionString = config.GetConnectionString("DefaultConnection");
             options = new DbContextOptionsBuilder<HotelContext>();
             options.UseSqlServer(connectionString);
-            using (var db = new HotelContext(options.Options))
+            db = new HotelContext(options.Options);
+            // if database exists then seed first then migrate otherwise other way around
+            if ((db.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists())
             {
-                // if database exists then seed first then migrate otherwise other way around
-                if ((db.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists())
-                {
-                    SeedData(db);
-                    db.Database.Migrate();
-                }
-                else
-                {
-                    db.Database.Migrate();
-                    SeedData(db);
-                }
-                // activate/deactivate/archive bookings and invoices when needed
-                db.Booking.Where(b => !b.IsArchived)
-                    .ToList()
-                    .ForEach(b =>
-                    {
-                        var invoice = db.Invoice.First(i => i.BookingId == b.Id);
-                        if (!invoice.IsPaid && DateTime.Today >= invoice.DueDate)
-                        {
-                            invoice.IsArchived = true;
-                            b.IsActive = false;
-                            b.IsArchived = true;
-                        }
-                        if (DateTime.Today >= b.EndDate)
-                        {
-                            b.IsActive = false;
-                            b.IsArchived = true;
-                        }
-                        else if (DateTime.Today >= b.StartDate)
-                        {
-                            b.IsActive = true;
-                        }
-                    });
-                db.SaveChanges();
+                SeedData(db);
+                db.Database.Migrate();
             }
+            else
+            {
+                db.Database.Migrate();
+                SeedData(db);
+            }
+            // activate/deactivate/archive bookings and invoices when needed
+            db.Booking.Where(b => !b.IsArchived)
+                .ToList()
+                .ForEach(b =>
+                {
+                    var invoice = db.Invoice.First(i => i.BookingId == b.Id);
+                    if (!invoice.IsPaid && DateTime.Today >= invoice.DueDate)
+                    {
+                        invoice.IsArchived = true;
+                        b.IsActive = false;
+                        b.IsArchived = true;
+                    }
+                    if (DateTime.Today >= b.EndDate)
+                    {
+                        b.IsActive = false;
+                        b.IsArchived = true;
+                    }
+                    else if (DateTime.Today >= b.StartDate)
+                    {
+                        b.IsActive = true;
+                    }
+                });
+            db.SaveChanges();
         }
         public void Run()
         {
-            Menu.MainMenu(new HotelContext(options.Options));
+            Menu.MainMenu(db);
         }
         private void SeedData(HotelContext db)
         {

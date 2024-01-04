@@ -19,21 +19,21 @@ namespace HotelApp.Core.Handlers
             int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new room\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             Console.WriteLine("\nSize to bed(+extra beds) conversion:\n 40: 2+2 - 30-39: 2+1 - 15-29: 1+0\n");
             Console.Write("Write the size of the room:(15-40) ");
             while (!int.TryParse(Console.ReadLine(), out input) || !(input >= 15 && input <= 40))
             {
-                if (input == 0) return;
+                if (input == -1) return;
                 Console.WriteLine($"Please enter a size between 15-40");
             }
             room.Size = input;
             SetBeds(ref input, ref room); // Adjust the beds and extra beds that can be in the room
             Console.WriteLine($"The room will have {room.Beds} beds and can have {room.ExtraBeds} extra beds.");
             Console.Write("Write the price(per day) of the room: ");
-            while (!int.TryParse(Console.ReadLine(), out input) || input == 0)
+            while (!int.TryParse(Console.ReadLine(), out input) || input == -1)
             {
-                if (input == 0) return;
+                if (input == -1) return;
                 Console.WriteLine($"Please enter a number.");
             }
             room.Price = input;
@@ -47,7 +47,7 @@ namespace HotelApp.Core.Handlers
             int roomIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a room\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Size", "Beds+Extra Beds", "Price per day");
             table.Options.EnableCount = false;
             allRooms.ForEach(r => table.AddRow(r.Id, r.Size + "m^2", r.Beds + "+" + r.ExtraBeds, r.Price + "kr"));
@@ -55,7 +55,7 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which room would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
             {
-                if (roomIndex == 0) return;
+                if (roomIndex == -1) return;
                 Console.WriteLine($"Please enter an option.");
             }
             Room selectedRoom = db.Room.First(cr => cr.Id == roomIndex);
@@ -93,7 +93,7 @@ namespace HotelApp.Core.Handlers
             int roomIndex, input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a room\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Size", "Beds+Extra Beds", "Price per day");
             table.Options.EnableCount = false;
             allRooms.ForEach(r => table.AddRow(r.Id, r.Size + "m^2", r.Beds + "+" + r.ExtraBeds, r.Price + "kr"));
@@ -101,21 +101,20 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which room would you like to edit?");
             while (!int.TryParse(Console.ReadLine(), out roomIndex) || !allRooms.Any(r => r.Id == roomIndex))
             {
-                if (roomIndex == 0) return;
+                if (roomIndex == -1) return;
                 Console.WriteLine("Please enter an option");
             }
-            if (roomIndex == 0) return;
             Room selectedRoom = db.Room.First(cr => cr.Id == roomIndex);
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting Room {selectedRoom.Id}\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             Console.WriteLine("1. Size (affects amount of beds)");
             Console.WriteLine("2. Price per day");
             Console.Write("Which part would you like to edit?");
-            while (!int.TryParse(Console.ReadLine(), out roomIndex) || !Enumerable.Range(0, 3).Contains(roomIndex))
+            while (!int.TryParse(Console.ReadLine(), out roomIndex) || !Enumerable.Range(1, 2).Contains(roomIndex))
             {
-                if (roomIndex == 0) return;
-                Console.WriteLine("Please enter an option (0-2)");
+                if (roomIndex == -1) return;
+                Console.WriteLine("Please enter an option");
             }
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting Room {selectedRoom.Id} \n ");
@@ -126,7 +125,7 @@ namespace HotelApp.Core.Handlers
                     Console.Write("What would you like to change the size to?(15-40) ");
                     while (!int.TryParse(Console.ReadLine(), out input) || !(input >= 15 && input <= 40))
                     {
-                        if (input == 0) return;
+                        if (input == -1) return;
                         Console.WriteLine("Please follow the instructions.");
                     }
                     selectedRoom.Size = input;
@@ -136,7 +135,7 @@ namespace HotelApp.Core.Handlers
                     Console.Write("What would you like to change the price to? ");
                     while (!int.TryParse(Console.ReadLine(), out input) || input <= 0)
                     {
-                        if (input == 0) return;
+                        if (input == -1) return;
                         Console.WriteLine("Please enter a value above 0kr");
                     }
                     selectedRoom.Price = input;

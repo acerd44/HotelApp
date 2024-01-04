@@ -39,7 +39,7 @@ namespace HotelApp.Core.Handlers
             bool firstCheck = false;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Creating a new booking\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             if (existingGuest == null)
             {
                 var guestTable = new ConsoleTable("Guest ID", "Name");
@@ -49,7 +49,7 @@ namespace HotelApp.Core.Handlers
                 Console.Write("Write the guest id for the booking: ");
                 while (!int.TryParse(Console.ReadLine(), out input) || !allGuests.Any(g => g.Id == input))
                 {
-                    if (input == 0) return;
+                    if (input == -1) return;
                     Console.WriteLine("Please enter the correct option.");
                 }
                 booking.GuestId = input;
@@ -61,9 +61,9 @@ namespace HotelApp.Core.Handlers
                 guest = existingGuest;
             }
             Console.Write("How many will be staying at the hotel?(1-4) ");
-            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 5).Contains(input))
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(1, 4).Contains(input))
             {
-                if (input == 0) return;
+                if (input == -1) return;
                 Console.WriteLine("You may only have up to 4 guests. (1-4)");
             }
             booking.Guests = input;
@@ -78,9 +78,9 @@ namespace HotelApp.Core.Handlers
                 dateInput = Console.ReadLine().ToLower();
                 while (true)
                 {
-                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
+                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("-1"))
                     {
-                        if (dateInput.Equals("0")) return;
+                        if (dateInput.Equals("-1")) return;
                         Console.WriteLine("Don't type empty entries");
                     }
                     else
@@ -111,9 +111,9 @@ namespace HotelApp.Core.Handlers
                 dateInput = Console.ReadLine().ToLower();
                 while (true)
                 {
-                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
+                    if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("-1"))
                     {
-                        if (dateInput.Equals("0")) return;
+                        if (dateInput.Equals("-1")) return;
                         Console.WriteLine("Don't type empty entries");
                     }
                     else
@@ -158,9 +158,9 @@ namespace HotelApp.Core.Handlers
             booking.EndDate = endDate;
             if (startDate == DateTime.Today) booking.IsActive = true;
             Console.Clear();
-            Console.WriteLine("To find availability of other rooms with less/more guests and/or dates, enter -1");
-            Console.WriteLine("To book as another guest, enter -2");
-            Console.WriteLine("To exit, enter 0");
+            Console.WriteLine("To exit, enter -1");
+            Console.WriteLine("To find availability of other rooms with less/more guests and/or dates, enter -2");
+            Console.WriteLine("To book as another guest, enter -3");
             Console.WriteLine("\nRecommended room(s) based on how many will be staying:");
             var table = new ConsoleTable("Room ID", "Size", "Beds+Extra Beds", "Price");
             table.Options.EnableCount = false;
@@ -169,9 +169,9 @@ namespace HotelApp.Core.Handlers
             Console.Write("\nWrite the room id of the booking: ");
             while (!int.TryParse(Console.ReadLine(), out input) || !recommendedRooms.Any(r => r.Id == input))
             {
-                if (input == 0) return;
-                if (input == -1) Create(db, guest);
-                if (input == -2) Create(db);
+                if (input == -1) return;
+                if (input == -2) Create(db, guest);
+                if (input == -3) Create(db);
                 Console.WriteLine("Please enter the correct option.");
             }
             booking.RoomId = input;
@@ -189,12 +189,12 @@ namespace HotelApp.Core.Handlers
         public static void Delete(HotelContext db)
         {
             List<Booking> allBookings = new();
-            allBookings = db.Booking.Include(b => b.Guest).ToList();
+            allBookings = db.Booking.Include(b => b.Guest).Where(b => b.IsActive).ToList();
             if (allBookings.Count == 0) return;
             int bookingIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Cancelling a booking\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Guest", "Room ID", "Start Date", "End Date");
             allBookings.Where(b => b.EndDate > DateTime.Today).ToList().ForEach(b => table.AddRow(b.Id, b.Guest.Name, b.RoomId,
                 b.StartDate.ToShortDateString(), b.EndDate.ToShortDateString()));
@@ -203,7 +203,7 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which booking would you like to cancel? ");
             while (!int.TryParse(Console.ReadLine(), out bookingIndex) || !allBookings.Any(b => b.Id == bookingIndex))
             {
-                if (bookingIndex == 0) return;
+                if (bookingIndex == -1) return;
                 Console.WriteLine($"Please enter an option");
             }
             Booking booking = allBookings.First(b => b.Id == bookingIndex);
@@ -238,7 +238,7 @@ namespace HotelApp.Core.Handlers
             string? dateInput = string.Empty;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Editting a booking\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Guest", "Room ID", "Start Date", "End Date");
             allBookings.Where(b => b.EndDate > DateTime.Today).ToList().ForEach(b => table.AddRow(b.Id, b.Guest.Name, b.RoomId,
                 b.StartDate.ToShortDateString(), b.EndDate.ToShortDateString()));
@@ -247,23 +247,23 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which booking would you like to edit? ");
             while (!int.TryParse(Console.ReadLine(), out bookingIndex) || !allBookings.Any(b => b.Id == bookingIndex))
             {
-                if (bookingIndex == 0) return;
+                if (bookingIndex == -1) return;
                 Console.WriteLine("Please enter an option");
             }
             Booking booking = allBookings.First(b => b.Id == bookingIndex);
             Invoice invoice = db.Invoice.First(i => i.BookingId == booking.Id);
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting booking {booking.Id}\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             Console.WriteLine("1. Guest Id");
             Console.WriteLine("2. Room Id");
             Console.WriteLine("3. Start date");
             Console.WriteLine("4. End date");
             Console.Write("Which part would you like to edit? ");
-            while (!int.TryParse(Console.ReadLine(), out bookingIndex) || !Enumerable.Range(0, 5).Contains(bookingIndex))
+            while (!int.TryParse(Console.ReadLine(), out bookingIndex) || !Enumerable.Range(1, 4).Contains(bookingIndex))
             {
-                if (bookingIndex == 0) return;
-                Console.WriteLine("Please enter an option (0-4)");
+                if (bookingIndex == -1) return;
+                Console.WriteLine("Please enter an option");
             }
             Console.Clear();
             Console.WriteLine($"Hossen Hotel - Editting Booking {booking.Id} " +
@@ -277,7 +277,7 @@ namespace HotelApp.Core.Handlers
                     {
                         while (!int.TryParse(Console.ReadLine(), out input) || !db.Guest.Where(g => g != booking.Guest).Any(g => g.Id == input))
                         {
-                            if (input == 0) return;
+                            if (input == -1) return;
                             Console.WriteLine("Please enter an option");
                         }
                         var selectedGuest = db.Guest.First(g => g.Id == input);
@@ -319,7 +319,7 @@ namespace HotelApp.Core.Handlers
                     Console.Write("What would you like to change the room ID to? ");
                     while (!int.TryParse(Console.ReadLine(), out input) || !availableRooms.Any(r => r.Id == input))
                     {
-                        if (input == 0) return;
+                        if (input == -1) return;
                         Console.WriteLine("Please enter an option");
                     }
                     // If the room change happens after the booking started, make sure to include the price of the first room of the booking.
@@ -355,9 +355,9 @@ namespace HotelApp.Core.Handlers
                     dateInput = Console.ReadLine().ToLower();
                     while (true)
                     {
-                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
+                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("-1"))
                         {
-                            if (dateInput.Equals("0")) return;
+                            if (dateInput.Equals("-1")) return;
                             Console.WriteLine("Don't type empty entries");
                         }
                         else
@@ -412,9 +412,9 @@ namespace HotelApp.Core.Handlers
                     dateInput = Console.ReadLine().ToLower();
                     while (true)
                     {
-                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("0"))
+                        if (string.IsNullOrEmpty(dateInput) || string.IsNullOrWhiteSpace(dateInput) || dateInput.Equals("-1"))
                         {
-                            if (dateInput.Equals("0")) return;
+                            if (dateInput.Equals("-1")) return;
                             Console.WriteLine("Don't type empty entries");
                         }
                         else
@@ -452,14 +452,14 @@ namespace HotelApp.Core.Handlers
             int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all bookings\n ");
-            Console.WriteLine("0. Exit");
+            Console.WriteLine("-1. Exit");
             Console.WriteLine("1. Show all bookings");
             Console.WriteLine("2. Only show archived bookings");
             Console.WriteLine("3. Only show unarchived bookings");
-            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 4).Contains(input))
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(1, 3).Contains(input))
             {
-                if (input == 0) return;
-                Console.WriteLine("Please enter an option (0-3)");
+                if (input == -1) return;
+                Console.WriteLine("Please enter an option");
             }
             Console.Clear();
             var table = new ConsoleTable();
@@ -480,8 +480,6 @@ namespace HotelApp.Core.Handlers
                     allBookings.Where(b => !b.IsArchived).ToList().ForEach(b => table.AddRow(b.Id, b.Guest.Name, b.RoomId,
                         b.StartDate.ToShortDateString(), b.EndDate.ToShortDateString()));
                     break;
-                case 0:
-                    return;
             }
             table.Write();
             Console.WriteLine("\nPress any button to continue.");

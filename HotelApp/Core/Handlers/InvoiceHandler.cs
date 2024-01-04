@@ -28,7 +28,7 @@ namespace HotelApp.Core.Handlers
             int invoiceIndex;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Deleting a invoice\n ");
-            Console.WriteLine("0. Back");
+            Console.WriteLine("-1. Back");
             var table = new ConsoleTable("Id", "Guest", "Paid Date", "Due Date", "Total Sum", "Archived");
             table.Options.EnableCount = false;
             allInvoices.ForEach(i =>
@@ -40,7 +40,7 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which invoice would you like to delete? ");
             while (!int.TryParse(Console.ReadLine(), out invoiceIndex) || !allInvoices.Any(i => i.Id == invoiceIndex))
             {
-                if (invoiceIndex == 0) return;
+                if (invoiceIndex == -1) return;
                 Console.WriteLine("Please enter an option");
             }
             Invoice invoice = allInvoices.First(i => i.Id == invoiceIndex);
@@ -72,14 +72,14 @@ namespace HotelApp.Core.Handlers
             int input;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Showing all invoices\n ");
-            Console.WriteLine("0. Exit");
+            Console.WriteLine("-1. Exit");
             Console.WriteLine("1. Show all invoices");
             Console.WriteLine("2. Only show paid invoices");
             Console.WriteLine("3. Only show unpaid invoices");
             Console.WriteLine("4. Only show archived invoices");
-            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, 5).Contains(input))
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(1, 4).Contains(input))
             {
-                if (input == 0) return;
+                if (input == -1) return;
                 Console.WriteLine("Please enter an option (0-4)");
             }
             Console.Clear();
@@ -146,6 +146,7 @@ namespace HotelApp.Core.Handlers
             if (guestsWithInvoices.Count == 0) return;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - Paying off an invoice\n");
+            Console.WriteLine("-1. Back");
             int input;
             var table = new ConsoleTable("Id", "Name");
             table.Options.EnableCount = false;
@@ -157,7 +158,7 @@ namespace HotelApp.Core.Handlers
             Console.Write("Which guest is paying their invoice? ");
             while (!int.TryParse(Console.ReadLine(), out input) || !guestsWithInvoices.Any(i => i.Id == input))
             {
-                if (input == 0) return;
+                if (input == -1) return;
                 Console.WriteLine("Please enter the correct option.");
             }
             Guest guest = guestsWithInvoices.First(g => g.Id == input);
@@ -172,7 +173,7 @@ namespace HotelApp.Core.Handlers
             while (!int.TryParse(Console.ReadLine(), out input)
                 || !guest.Invoices.Any(i => i.Id == input))
             {
-                if (input == 0) return;
+                if (input == -1) return;
                 Console.WriteLine("Please enter the correct option.");
             }
             Invoice invoice = guest.Invoices.First(i => i.Id == input);

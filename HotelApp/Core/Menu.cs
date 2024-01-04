@@ -21,7 +21,7 @@ namespace HotelApp.Core
             {
                 Console.Clear();
                 Console.WriteLine("Welcome to Hossen Hotel\n");
-                Console.WriteLine("0. Exit");
+                Console.WriteLine("-1. Exit");
                 Console.WriteLine("1. New booking");
                 Console.WriteLine("2. Pay invoice");
                 Console.WriteLine("3. Cancel booking");
@@ -41,7 +41,7 @@ namespace HotelApp.Core
                     case 4:
                         CRUDMenu(db);
                         break;
-                    case 0:
+                    case -1:
                         menu = false;
                         break;
                 }
@@ -55,7 +55,7 @@ namespace HotelApp.Core
             {
                 Console.Clear();
                 Console.WriteLine("Hossen Hotel - Admin\n");
-                Console.WriteLine("0. Exit");
+                Console.WriteLine("-1. Exit");
                 Console.WriteLine("1. Guests");
                 Console.WriteLine("2. Rooms");
                 Console.WriteLine("3. Bookings");
@@ -75,7 +75,7 @@ namespace HotelApp.Core
                     case 4:
                         InvoiceMenu(db);
                         break;
-                    case 0:
+                    case -1:
                         menu = false;
                         break;
                 }
@@ -86,11 +86,11 @@ namespace HotelApp.Core
             int input = 0;
             Console.Clear();
             Console.WriteLine("Hossen Hotel - New booking\n");
-            Console.WriteLine("0. Exit");
+            Console.WriteLine("-1. Exit");
             Console.WriteLine("1. Existing guest");
             Console.WriteLine("2. New guest");
             RequestEntryWithinRange("", ref input, 2);
-            if (input == 0) return;
+            if (input == -1) return;
             else
             {
                 if (input == 1) BookingHandler.Create(db);
@@ -112,7 +112,7 @@ namespace HotelApp.Core
             {
                 Console.Clear();
                 Console.WriteLine("Hossen Hotel - Guests\n");
-                Console.WriteLine("0. Exit");
+                Console.WriteLine("-1. Exit");
                 Console.WriteLine("1. Add a guest");
                 Console.WriteLine("2. Delete a guest");
                 Console.WriteLine("3. Edit a guest");
@@ -132,7 +132,7 @@ namespace HotelApp.Core
                     case 4:
                         GuestHandler.ShowAll(db);
                         break;
-                    case 0:
+                    case -1:
                         menu = false;
                         break;
                 }
@@ -146,7 +146,7 @@ namespace HotelApp.Core
             {
                 Console.Clear();
                 Console.WriteLine("Hossen Hotel - Rooms\n");
-                Console.WriteLine("0. Exit");
+                Console.WriteLine("-1. Exit");
                 Console.WriteLine("1. Add a room");
                 Console.WriteLine("2. Delete a room");
                 Console.WriteLine("3. Edit a room");
@@ -166,7 +166,7 @@ namespace HotelApp.Core
                     case 4:
                         RoomHandler.ShowAll(db);
                         break;
-                    case 0:
+                    case -1:
                         menu = false;
                         break;
                 }
@@ -180,7 +180,7 @@ namespace HotelApp.Core
             {
                 Console.Clear();
                 Console.WriteLine("Hossen Hotel - Bookings\n");
-                Console.WriteLine("0. Exit");
+                Console.WriteLine("-1. Exit");
                 Console.WriteLine("1. Add a booking");
                 Console.WriteLine("2. Delete a booking");
                 Console.WriteLine("3. Edit a booking");
@@ -200,7 +200,7 @@ namespace HotelApp.Core
                     case 4:
                         BookingHandler.ShowAll(db);
                         break;
-                    case 0:
+                    case -1:
                         menu = false;
                         break;
                 }
@@ -214,7 +214,7 @@ namespace HotelApp.Core
             {
                 Console.Clear();
                 Console.WriteLine("Hossen Hotel - Invoices\n");
-                Console.WriteLine("0. Exit");
+                Console.WriteLine("-1. Exit");
                 //Console.WriteLine("1. Add an invoice, does nothing");
                 Console.WriteLine("1. Delete an invoice");
                 //Console.WriteLine("3. Edit an invoice, does nothing");
@@ -228,7 +228,7 @@ namespace HotelApp.Core
                     case 2:
                         InvoiceHandler.ShowAll(db);
                         break;
-                    case 0:
+                    case -1:
                         menu = false;
                         break;
                 }
@@ -243,10 +243,10 @@ namespace HotelApp.Core
         public static void RequestEntryWithinRange(string request, ref int input, int range)
         {
             Console.Write(request);
-            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(0, range + 1).Contains(input))
+            while (!int.TryParse(Console.ReadLine(), out input) || !Enumerable.Range(1, range).Contains(input))
             {
-                if (input == 0) return;
-                Console.WriteLine($"Please enter an option (0-{range})");
+                if (input == -1) return;
+                Console.WriteLine($"Please enter an option");
             }
         }
     }
