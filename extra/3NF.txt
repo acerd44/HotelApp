@@ -1,0 +1,42 @@
+English:
+
+My database follows 1NF because:
+- Each column contains one value and datatype and it follows its datatype, for example: Guest.IsActive is always a bit/bool and either has the value of 0 (false) or 1 (true)
+or a Guest's address only being one address, not multiple ones.
+- Each column name in a table is unique
+- Each table has a primary key (ID)
+
+2NF:
+There are no partial dependencies because:
+- There are no non-prime attributes that depend on a portion of a primary key
+Example: Booking table has RoomID and GuestID but not columns like GuestName or RoomSize, 
+it'll use the GuestID to get its name or the RoomID to get its size.
+- There are foreign keys when other tables are related. Like Invoice having BookingID, Booking having GuestID and RoomID
+
+3NF:
+There are no transitive dependencies because:
+- There are no non-prime attributes that are dependent on other non-prime attributes within the same table
+Example: If my Invoice table had a GuestName attribute which is dependent on the BookingID attribute
+It would mean there is a transitive dependency but everything is separated in my database.
+You would fix it by putting GuestName in Guest table and calling it using BookingID.
+______________________________________________________________________________________________________________
+Swedish:
+
+Min databas följer 1NF eftersom:
+- Varje attribut/kolumn innehåller ETT värde och EN datatyp, till example: Guest.IsActive är alltid en bit/bool och har antingen värdet 0 (false) eller 1 (true)
+ett annat exempel är att en Guest.Address har bara en address, inte flera.
+- Varje kolumnnamn är unikt
+- Varje tabell har en primary key (ID)
+
+
+2NF:
+Det finns inga partial dependencies:
+- Det finns inga non-primary attributer som beror på en del av en primary key.
+Exempel: Booking table har RoomID och GuestID men inte GuestName eller RoomSize. Man ska använda GuestID får att få Guest.Name eller RoomID för att få Room.Size
+- Det finns foreign keys när andra tabeller är relaterade. Invoice med BookingID och Booking med GuestID och RoomID
+
+3NF:
+Det finns inga transitive dependencies:
+- Det finns inga non-primary attributer som är beroende av andra non-primary attributer i samma tabell.
+Exempel: Om min Invoice tabell hade ett GuestName attribut som är beroende av BookingID, skulle det betyda att det finns ett transitive dependency men allt är separat.
+Man skulla fixa detta genom att sätta GuestName i Guest tabellen och anropa det med hjälp av BookingID
